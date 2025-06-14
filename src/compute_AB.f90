@@ -56,14 +56,18 @@ contains
       ! open(UNIT=10, FILE="lambda.dat", STATUS="REPLACE")
       do iQ_r = 1,sys%nQ
          do iQ_l = 1,sys%nQ
-            do M = 1,sys%nex_max
-              do N = 1,sys%nex_max
-                 do I = 1,sys%nex_max
-                    do J = 1,sys%nex_max
+            do M = 1,sys%neb
+              do N = 1,sys%neb
+                 do I = 1,sys%neb
+                    do J = 1,sys%neb
                     
                      call compute_lambda_tttt(I,J,M,N,iQ_r,iQ_l,lambda1)
-                      print*,"lambda",I,J,M,N,iQ_r,iQ_l,lambda1
+                      !print*,"lambda",I,J,M,N,iQ_r,iQ_l,lambda1
                       ham%lambda_tttt(I,J,M,N,iQ_r,iQ_l) = lambda1
+                      if(I==1 .and. J==2 .and. M==1 .and. N==4 .and. iQ_r==1 .and. iQ_l== 2)then 
+                         print*,"yellow",lambda1
+                        print*,"lambda_tttt",I,J,M,N,iQ_r,iQ_l,ham%lambda_tttt(I,J,M,N,iQ_r,iQ_l)
+                      end if 
                   !  call compute_lambda_ssss(I,J,M,N,Q_r,Q_l,lambda2)
                   !   !print*,"lambda",I,J,M,N,lambda2
                   !    ham%lambda_ssss(I,J,M,N) = lambda2

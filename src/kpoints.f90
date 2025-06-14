@@ -37,7 +37,7 @@ module kpoints
         call h5dopen_f(file_id, dsetname2, dset2_id, error) 
         call h5dread_f(dset2_id, H5T_NATIVE_DOUBLE, Qpts, data2_dims, error)
         call h5dclose_f(dset2_id, error)
-        sys%Qpts(:, i) = Qpts(:, 1)
+        sys%Qpts(:, i) = -Qpts(:, 1)
         print*, "Q-point ", i, ": ", sys%Qpts(1, i), sys%Qpts(2, i), sys%Qpts(3, i)
         !close the file
         call h5fclose_f(file_id, error)
@@ -45,7 +45,7 @@ module kpoints
 
     end subroutine read_Qpoints
 
-        subroutine read_kpoints()
+    subroutine read_kpoints()
     ! read kpoint sfrom eigenvectors.h5 file
     character(len=15), parameter :: filename = "eigenvectors.h5"
     character(len=26), parameter :: dsetname1 = "/exciton_header/kpoints/nk"
@@ -75,7 +75,6 @@ module kpoints
     call h5dread_f(dset2_id, H5T_NATIVE_DOUBLE, sys%kpts, data2_dims, error)
     call h5dclose_f(dset2_id, error)
 
-
     ! Close the HDF5 file   
 
     do i = 1, sys%nk
@@ -92,11 +91,24 @@ module kpoints
         integer, intent(out) :: index
         double precision :: dist
         integer :: i
-
+        double precision :: ebz1(3),ebz2(3)
+        ebz1 = [0.0,0.0,-0.5]
+        ebz2 = [0.0,0.0,+0.5]
         ! Initialize the index to -1 (not found)
         index = -1
         ! fold the point into firtst brillion zone from 0 to 1
         !print*,anint(kpt)
+        kpt(1) = mod(kpt(1),1.0)
+        kpt(2) = mod(kpt(2),1.0)
+        kpt(3) = mod(kpt(3),1.0)
+        !print*,"if 0.5, this should be zero",(sqrt(sum((kpt(:) - ebz2(:))**2)))
+        if(sqrt(sum((kpt(:) - ebz1(:))**2)) < 1.0e-4) then
+            index = sys%nk/2 + 1
+        end if
+        if(sqrt(sum((kpt(:) - ebz2(:))**2)) < 1.0e-4) then
+              index = sys%nk/2 + 1
+        end if
+        
         kpt = kpt - floor(kpt+0.5)
         !kpt = kpt - anint(kpt)
         !kpt = mod(kpt + 0.5, 1.0) - 0.5
@@ -104,7 +116,7 @@ module kpoints
         ! Loop through all kpoints to find the closest match
         do i = 1, sys%nk
             dist = sqrt(sum((sys%kpts(:, i) - kpt)**2))
-            if (dist < 1.0e-6) then  ! tolerance for matching
+            if (dist < 1.0e-4) then  ! tolerance for matching
                 index = i
                 return
             end if
@@ -120,19 +132,38 @@ module kpoints
         integer, intent(out) :: index
         double precision :: dist
         integer :: i
+        double precision :: ebz1(3),ebz2(3)
+        ebz1 = [0.0,0.0,-0.5]
+        ebz2 = [0.0,0.0,+0.5]
 
         ! Initialize the index to -1 (not found)
         index = -1
+         Qpt(1) = mod(Qpt(1),1.0)
+        Qpt(2) = mod(Qpt(2),1.0)
+        Qpt(3) = mod(Qpt(3),1.0)
+        !print*,"if 0.5, this should be zero",(sqrt(sum((kpt(:) - ebz2(:))**2)))
+        if(sqrt(sum((Qpt(:) - ebz1(:))**2)) < 1.0e-4) then
+            index = sys%nQ/2 + 1
+        end if
+        if(sqrt(sum((Qpt(:) - ebz2(:))**2)) < 1.0e-4) then
+              index = sys%nQ/2 + 1
+        end if
         ! fold the point into firtst brillion zone from 0 to 1
-        Qpt = Qpt - floor(Qpt+0.5)
+        Qpt = Qpt - floor(Qpt + 0.5)
+       ! print*, "floorQpt", Qpt(1), Qpt(2), Qpt(3)
         ! Loop through all kpoints to find the closest match
         do i = 1, sys%nQ
             dist = sqrt(sum((sys%Qpts(:, i) - Qpt)**2))
-            if (dist < 1.0e-6) then  ! tolerance for matching
+           ! print*,"dist,Qpts",dist,sys%Qpts(1,i),sys%Qpts(2,i),sys%Qpts(3,i)
+           
+            if (dist < 1.0e-4) then  ! tolerance for matching
                 index = i
                 return
             end if
         end do
+        if(index==-1)then
+            print*,"Qpoint not found"
+        end if
 
     end subroutine Qpoint_to_index
 

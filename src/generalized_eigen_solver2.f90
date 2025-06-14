@@ -2,6 +2,7 @@ module solve_generalized_eigenvalue_problem
    use global_variables
    use compute_lambda_and_xi
    use compute_AB
+   use kpoints
 
    !use lapacks generalized eigenvalue solver dggevx, with A = ham%A and B = ham%B and m=ham%l
 
@@ -10,16 +11,12 @@ module solve_generalized_eigenvalue_problem
 
    contains
 
-      subroutine solve_eigenvalue_overlap()
+
+   subroutine solve_eigenvalue_overlap()
     
-    integer :: ilo,ihi,valid_count
+    integer :: ilo,ihi
     integer :: I_s,J_s,M_s,N_s
-    !double precision :: ellow,elup
-    double precision,allocatable,dimension(:) :: alphar,alphai,beta
-    double precision,allocatable,dimension(:,:) :: vl,vr
-    double precision,allocatable,dimension(:) :: lscale,rscale
-    double precision,allocatable,dimension(:) :: rconde,rcondv
-    double precision,allocatable,dimension(:) :: work
+    integer :: s1,s2   !ss or tt state
     integer,allocatable,dimension(:) :: iwork
     logical,allocatable,dimension(:) :: bwork
     integer :: lwork,info,nfound
@@ -28,49 +25,32 @@ module solve_generalized_eigenvalue_problem
     double precision :: abnrm,bbnrm,abstol,norm
     integer :: I_ex,J_ex,M_ex,N_ex,n,m
     integer :: c1,c2,c3,c4,c
-    double precision :: sum,ellow,elup,sum1,sum2,sum3,sum4
+    double precision :: ellow,elup
+    complex(kind=8) :: sum,sum2,sum3,sum4
+    complex(kind=8) :: A_MN,A_MNe,A_MNh,A_NM,IJ_amp
+    integer :: ik1,ik2,iq
+    double precision :: q(3),mQl(3)
     double precision,allocatable,dimension(:,:) :: cMN,cijab
-    double precision,allocatable,dimension(:,:) :: old,new
+    double precision,allocatable,dimension(:,:) :: old
     integer,allocatable :: iarray(:),jarray(:),aarray(:),barray(:)
     double precision , allocatable :: c_ijab(:)
-    !CHARACTER(100) :: line,res1
+    CHARACTER(100) :: line,res1
     CHARACTER, DIMENSION(100) :: res
     integer :: status
-    integer :: s1,s2
-    !nteger :: p1,p2,ind,v
-    !double precision :: x,c_v_MN
+    integer :: p1,p2,ind,v
+    double precision :: x,c_v_MN
+   integer :: iQ_l,iQ_r,imQ_l
+   double precision  ::Q_l(3)
    ! Construct overlap matrices and diagonalize it.
   
-    lwork = 8*ham%l
-    print*,sys%ncutoff
-    !sys%ncutoff =  sys%nex*(sys%nex+1)
-    !sys%ncutoff = !sys%nex*(sys%nex+1)/2
-     z = sys%ncutoff
-     ham%l = sys%ncutoff
-     print*,"hello7"
-     allocate(ham%O(sys%ncutoff,sys%ncutoff))
-     allocate(ham%H(sys%ncutoff,sys%ncutoff))
-    print*,"Hello8"
-   
-    allocate(alphar(ham%l),alphai(ham%l),beta(ham%l))
-    allocate(vl(ham%l,ham%l),vr(ham%l,ham%l))
-    allocate(lscale(ham%l),rscale(ham%l))
-    allocate(rconde(ham%l),rcondv(ham%l))
-    allocate(work(lwork))
-    allocate(iwork(ham%l+6))
-    allocate(bwork(ham%l))
-    allocate(ifail(ham%l))
-    alphar = 0.0
-    alphai = 0.0
-    beta = 0.0
-    vl = 0.0
-    vr = 0.0
-    BWORK = .false.
-    lwork = 8*ham%l
-   
-    !ham%A = 0.0
-    ham%O = 0.0
-    ham%H =0.0
+   ! lwork = 8*ham%l
+    !allocate(ifail(ham%l))
+     !z = sys%nex*(sys%nex+1)/2
+     !z = sys%ncutoff
+     ham%l = sys%neb*sys%neb*sys%nQ 
+     allocate(ham%O(ham%l,ham%l))
+ 
+    ham%O = cmplx(0.0,0.0)
     c1 =0
     c2 =0
     c3 =0
@@ -79,137 +59,123 @@ module solve_generalized_eigenvalue_problem
     
     
    
-    do c1 = 1,sys%ncutoff
-      M_s = exciton_sys%I_arr(c1)  
-      N_s = exciton_sys%J_arr(c1)
-      s1 = exciton_sys%spin_ind(c1)
-          print*,"c1,M_s,N_s,s1",c1,M_s,N_s,s1
-      do c2 = 1,sys%ncutoff
-         I_s = exciton_sys%I_arr(c2)  
-         J_s = exciton_sys%J_arr(c2)
-         s2 = exciton_sys%spin_ind(c2)
-            
-
-                 if (s1 == 1 .and. s2 ==1 )then
-                    ham%O(c1,c2) = ham%O(c1,c2) + ham%B_tttt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                    ham%H(c1,c2) = ham%H(c1,c2) + ham%A_tttt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                     !print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                     !print*,ham%O(c1,c2),c1,c2,s1,s2,ham%B_tttt(I_s,J_s,M_s,N_s),I_s,J_s,M_s,N_s
-                   ! print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                     !print*,ham%O(c1,c2),c1,c2,s1,s2,ham%B_tttt(I_s,J_s,M_s,N_s),I_s,J_s,M_s,N_s
-                 end if
-                 if (s1 == 2 .and. s2 ==2 )then
-                    ham%O(c1,c2) = ham%O(c1,c2) + ham%B_ssss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                    ham%H(c1,c2) = ham%H(c1,c2) + ham%A_ssss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     !print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                 end if
-                 if (s1 == 1 .and. s2==2 )then
-                     ham%O(c1,c2) = ham%O(c1,c2) + ham%B_ttss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                     ham%H(c1,c2) = ham%H(c1,c2) + ham%A_ttss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                 end if
-                 if (s1 == 2 .and. s2 ==1) then 
-                     ham%O(c1,c2) = ham%O(c1,c2) + ham%B_sstt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     ham%H(c1,c2) = ham%H(c1,c2) + ham%A_sstt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     !print*,"heeeeee",ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                 end if
-                 
-                 !write(2,*)c1,c2,ham%O(c1,c2),ham%H(c1,c2)
-               !end do
-              !end do
-            !end do
-         !end do
-       end do
-     end do
-    ! close(2)
+    !do c1 = 1,sys%ncutoff
+    do iQ_l =1,sys%nQ
+      Q_l = -sys%Qpts(:,iQ_l)
+      print*, "Q_l",iQ_l,Q_l(1),Q_l(2),Q_l(3)
+      call Qpoint_to_index(Q_l,imQ_l)
+      do M_s = 1,sys%neb
+         do N_s = 1,sys%neb
+            c1 = c1 + 1
+            c2 = 0
+           do iQ_r =1,sys%nQ
+               do I_s = 1,sys%neb
+                 do J_s = 1,sys%neb
+                    c2 = c2 + 1
+                        if (c1 .eq. c2)then
+                           !print*,"c1,c2",c1,c2
+                           ham%O(c1,c2) = ham%O(c1,c2) + 2.0
+                        end if
+                        ham%O(c1,c2) = ham%O(c1,c2)  - ham%lambda_tttt(I_s,J_s,M_s,N_s,iQ_r,iQ_l) -  ham%lambda_tttt(I_s,J_s,N_s,M_s,iQ_r,imQ_l)
+                        print*,c1,c2,ham%O(c1,c2)
+                        
+                  end do
+               end do
+            end do
+         end do
+      end do
+   end do
+   sum = 0.0
+   IJ_amp = 0.0
+   A_MN = 0.0
+   A_MNe = 0.0
+   A_MNh = 0.0
+   A_NM = 0.0
+   I = 1 
+   J =4
    
+   ik1 = 1
+   ik2 = 2
+   iQ_r = 4
 
+   
+   do M = 1,sys%neb
+      do N = 1,sys%neb
+         do iQ_l = 1,sys%nQ
+
+            mQl = -sys%Qpts(:,iQ_l)
+            call Qpoint_to_index(mQl,imQ_l)
+            A_MN = (exciton_sys%eigenvectors_t(1,1,1,ik1,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik2,N,imQ_l))
+            if(ik1 == ik2)then
+               A_MNe = (exciton_sys%eigenvectors_t(1,1,1,ik2,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik1,N,imQ_l))
+            end if
+            q = sys%kpts(:,ik1) - sys%kpts(:,ik2) - 2 *sys%Qpts(:,iQ_l)
+            call kpoint_to_index(q,iq)
+            if(iq==1)then
+               A_MNh = (exciton_sys%eigenvectors_t(1,1,1,ik1,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik2,N,imQ_l))
+            end if
+
+            A_NM =(exciton_sys%eigenvectors_t(1,1,1,ik2,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik1,N,imQ_l))
+            if(I ==M .and.J==N .and. iQ_l == iQ_r)then
+               IJ_amp = (A_MN - A_MNe - A_MNh + A_NM)
+            end if
+            sum = sum + ham%lambda_tttt(I,J,M,N,iQ_r,iQ_l)*(A_MN - A_MNe -A_MNh + A_NM)
+            !- exciton_sys%eigenvectors(1,1,1,ik1,M,iQ_l)*exciton_sys%eigenvectors(1,1,1,ik2,M,imQ_l) &
+            !- exciton_sys%eigenvectors(1,1,1,ik1,M,iQ_r)*exciton_sys%eigenvectors(1,1,1,ik2,N,iQ_l) &
+            !+ exciton_sys%eigenvectors(1,1,1,ik1,N,iQ_r)*exciton_sys%eigenvectors(1,1,1,ik2,M,iQ_l))
+         end do
+      end do
+   end do      
+  
+   print*,"projection on IJ",sum,IJ_amp         
+            
+      
+    !ham%A =- ham%B
+    z = ham%l
+   ! call dsyevx('V','I','U',z,ham%O,z,ellow,elup,1,z, &
+    !                          -1,nfound,alphar,vr,z,work,8*z,iwork,ifail,info)
+   !print*,ifail
+   !print*,alphar
    ! do gram schmidt for IJ operators
     !allocate(cMN(ham%l,ham%l))
-   ! sys%num_ortho = 32
-     !sys%ncutoff = sys%nex*(sys%nex+1)
-      sys%num_ortho = 12
-    allocate(ham%c(sys%ncutoff,sys%num_ortho))
-    allocate(new(sys%ncutoff,sys%num_ortho))
-    allocate(old(sys%ncutoff,sys%num_ortho))
-    ham%c = 0.0
-    old = 0.0
-    do i = 1,sys%ncutoff
-         do j = 1,sys%num_ortho
-            if(i == j)then
-           
-               old(i,j) = 1.0
-            end if
-         end do
-     end do
-!!
-!!
+ !   sys%num_ortho = 3
+ !   allocate(ham%c(sys%ncutoff,sys%num_ortho))
+ !   allocate(old(sys%ncutoff,sys%num_ortho))
+ !   ham%c = 0.0
+ !   old = 0.0
+ !   do i = 1,sys%ncutoff
+ !      do j = 1,sys%num_ortho
+ !         if(i == j)then
+ !        
+ !            old(i,j) = 1.0
+ !         end if
+ !      end do
+ !  end do
 !
  !  !gram-schmidt
-     valid_count = 0
-     do j = 1,sys%num_ortho
-       norm = dot_product(old(:,j),matmul(ham%O,old(:,j))) 
-       print*,"norm",norm
-       new(:,j) = old(:,j)/sqrt(norm)
-     
-       do k = j+1,sys%num_ortho
-           old(:,k) =  old(:,k) - (dot_product(new(:,j),matmul(ham%O,old(:,k))) * new(:,j))
-       end do
-       if (norm > 0.0001) then
-         valid_count = valid_count + 1
-         ham%c(:, valid_count) = old(:,j) / sqrt(norm)
-       else
-            print *, "Vector ", j, " discarded (linearly dependent)"
-       end if
-
-     !  norm = dot_product(old(:,j), matmul(ham%O, old(:,j)))
-      !print *, "Vector ", j, " norm after ortho = ", norm
-!! 
-      ! if (norm > 0.0001) then
-      !   valid_count = valid_count + 1
-      !   ham%c(:, valid_count) = old(:,j) / sqrt(norm)
-      ! else
-      !    print *, "Vector ", j, " discarded (linearly dependent)"
-      ! end if
-     end do 
-
-     sys%lin_ind = valid_count
-  ! valid_count=0
-  !  do j = 1, sys%num_ortho
-  !     !Orthogonalize against previous accepted vectors
-  !    do k = 1, valid_count
-  !       old(:,j) = old(:,j) - dot_product(ham%c(:,k), matmul(ham%O, old(:,j))) * ham%c(:,k)
-  !   end do
 !
-  !   ! Check norm after orthogonalization
-  !   norm = dot_product(old(:,j), matmul(ham%O, old(:,j)))
-  !   print *, "Vector ", j, " norm after ortho = ", norm
+ !    do j = 1,sys%num_ortho
+ !      norm = dot_product(old(:,j),matmul(ham%O,old(:,j))) 
+ !      print*,norm
+ !      ham%c(:,j) = old(:,j)/sqrt(norm)
+ !      do k = j+1,sys%num_ortho
+ !          old(:,k) =  old(:,k) - (dot_product(ham%c(:,j),matmul(ham%O,old(:,k))) * ham%c(:,j))
+ !      end do
+ !   end do 
+ !!  s = sys%nc*(sys%nc - 1)*sys%nv*(sys%nv - 1)/4
+ !!  allocate(c_ijab(s))
+ !!  allocate(iarray(s))
+ !!  allocate(jarray(s))
+ !!  allocate(aarray(s))
+ !!  allocate(barray(s))
+ !!  cijab = 0.0
+ !!  iarray = 0
+ !!  jarray = 0
+ !!  aarray = 0
+ !!  barray = 0
+!!
+ !  ! calculate ijab indices for each entry
 !
-  !   if (norm > 0.84) then
-  !       valid_count = valid_count + 1
-  !       ham%c(:, valid_count) = old(:,j) / sqrt(norm)
-  !   else
-  !       print *, "Vector ", j, " discarded (linearly dependent)"
-  !   end if
-  ! end do
-  !  !print*,ham%c(1,:)
-  !  sys%num_ortho = valid_count
-  !  print*,valid_count
-!
-  !  
- ! ! s = sys%nc*(sys%nc - 1)*sys%nv*(sys%nv - 1)/4
- !  allocate(c_ijab(s))
- !  allocate(iarray(s))
- !  allocate(jarray(s))
- !  allocate(aarray(s))
- !  allocate(barray(s))
- !  cijab = 0.0
- !  iarray = 0
- !  jarray = 0
- !  aarray = 0
- !  barray = 0
-!
-   ! calculate ijab indices for each entry
-
 !   c = 0
 !   do j = 1,sys%nc-1
 !      do i = j+1,sys%nc
@@ -224,7 +190,7 @@ module solve_generalized_eigenvalue_problem
 !              end do
 !          end do
 !      end do
-!   end doG
+!   end do
 !   ! read the biexciton eigenvector in 4p basis
 !    open (1, file='line.dat', status='old')
 !     do v = 1,1
@@ -355,240 +321,11 @@ module solve_generalized_eigenvalue_problem
     
             
    end subroutine solve_eigenvalue_overlap
-   
-
-
-   subroutine solve_eigenvalue_overlap1()
-    
-    integer :: ilo,ihi,valid_count
-    integer :: I_s,J_s,M_s,N_s
-    !double precision :: ellow,elup
-    double precision,allocatable,dimension(:) :: alphar,alphai,beta
-    double precision,allocatable,dimension(:,:) :: vl,vr
-    double precision,allocatable,dimension(:) :: lscale,rscale
-    double precision,allocatable,dimension(:) :: rconde,rcondv
-    double precision,allocatable,dimension(:) :: work
-    integer,allocatable,dimension(:) :: iwork
-    logical,allocatable,dimension(:) :: bwork
-    integer :: lwork,info,nfound
-    integer,dimension(:),allocatable :: ifail
-    integer :: i,j,alpha,bet,z,k,s,a,b
-    double precision :: abnrm,bbnrm,abstol,norm
-    integer :: I_ex,J_ex,M_ex,N_ex,n,m
-    integer :: c1,c2,c3,c4,c
-    double precision :: sum,ellow,elup,sum1,sum2,sum3,sum4
-    double precision,allocatable,dimension(:,:) :: cMN,cijab
-    double precision,allocatable,dimension(:,:) :: old
-    integer,allocatable :: iarray(:),jarray(:),aarray(:),barray(:)
-    double precision , allocatable :: c_ijab(:)
-    !CHARACTER(100) :: line,res1
-    CHARACTER, DIMENSION(100) :: res
-    integer :: status
-    integer :: s1,s2
-    !nteger :: p1,p2,ind,v
-    !double precision :: x,c_v_MN
-   ! Construct overlap matrices and diagonalize it.
-  
-    lwork = 8*ham%l
-    print*,sys%ncutoff
-    !sys%ncutoff =  sys%nex*(sys%nex+1)
-    !sys%ncutoff = !sys%nex*(sys%nex+1)/2
-     z = sys%ncutoff
-     ham%l = sys%ncutoff
-     print*,"hello7"
-     allocate(ham%O(sys%ncutoff,sys%ncutoff))
-     allocate(ham%H(sys%ncutoff,sys%ncutoff))
-    print*,"Hello8"
-   
-    allocate(alphar(ham%l),alphai(ham%l),beta(ham%l))
-    allocate(vl(ham%l,ham%l),vr(ham%l,ham%l))
-    allocate(lscale(ham%l),rscale(ham%l))
-    allocate(rconde(ham%l),rcondv(ham%l))
-    allocate(work(lwork))
-    allocate(iwork(ham%l+6))
-    allocate(bwork(ham%l))
-    allocate(ifail(ham%l))
-    alphar = 0.0
-    alphai = 0.0
-    beta = 0.0
-    vl = 0.0
-    vr = 0.0
-    BWORK = .false.
-    lwork = 8*ham%l
-   
-    !ham%A = 0.0
-    ham%O = 0.0
-    ham%H =0.0
-    c1 =0
-    c2 =0
-    c3 =0
-    c4 = 0
-
-    
-    
-   
-    !do c1 = 1,sys%ncutoff
-      !M_s = exciton_sys%I_arr(c1)  
-      !N_s = exciton_sys%J_arr(c1)
-      !s1 = exciton_sys%spin_ind(c1)
-    open(2,file='overlap.dat',status='replace')
-   do s1 = 1,2
-    do M_s = 1,sys%nex
-      do N_s = M_s,sys%nex
-         c1  = c1 + 1
-         c2  = 0 
-       do s2=1,2
-         do I_s = 1,sys%nex
-            do J_s = I_s,sys%nex
-               c2 = c2 + 1
-               !print*,"c1,c2",c1,c2,s1,s2
-
-                 if (s1 == 1 .and. s2 ==1 )then
-                    ham%O(c1,c2) = ham%O(c1,c2) + ham%B_tttt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                    ham%H(c1,c2) = ham%H(c1,c2) + ham%A_tttt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                     !print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                     !print*,ham%O(c1,c2),c1,c2,s1,s2,ham%B_tttt(I_s,J_s,M_s,N_s),I_s,J_s,M_s,N_s
-                   ! print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                     !print*,ham%O(c1,c2),c1,c2,s1,s2,ham%B_tttt(I_s,J_s,M_s,N_s),I_s,J_s,M_s,N_s
-                 end if
-                 if (s1 == 2 .and. s2 ==2 )then
-                    ham%O(c1,c2) = ham%O(c1,c2) + ham%B_ssss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                    ham%H(c1,c2) = ham%H(c1,c2) + ham%A_ssss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     !print*,ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                 end if
-                 if (s1 == 1 .and. s2==2 )then
-                     ham%O(c1,c2) = ham%O(c1,c2) + ham%B_ttss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                     ham%H(c1,c2) = ham%H(c1,c2) + ham%A_ttss(I_s,J_s,M_s,N_s)!/sqrt(ham%B_ssss(I_s,J_s,I_s,J_s)*ham%B_tttt(M_s,N_s,M_s,N_s))
-                 end if
-                 if (s1 == 2 .and. s2 ==1) then 
-                     ham%O(c1,c2) = ham%O(c1,c2) + ham%B_sstt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     ham%H(c1,c2) = ham%H(c1,c2) + ham%A_sstt(I_s,J_s,M_s,N_s)!/sqrt(ham%B_tttt(I_s,J_s,I_s,J_s)*ham%B_ssss(M_s,N_s,M_s,N_s))
-                     !print*,"heeeeee",ham%H(c1,c2),ham%O(c1,c2),c1,c2,I_s,J_s,M_s,N_s
-                 end if
-                 
-                 write(2,*)c1,c2,ham%O(c1,c2),ham%H(c1,c2)
-               end do
-              end do
-            end do
-         end do
-       end do
-     end do
-     close(2)
-   end subroutine solve_eigenvalue_overlap1
-   
-   subroutine solve_eigenvalue_O
-      ! diagonalize Hamiltonian ham%h using lapck routine dsyevx
-         integer :: z
-         double precision,allocatable,dimension(:) :: work
-         integer,allocatable,dimension(:) :: iwork
-         integer,allocatable,dimension(:) :: ifail
-         integer :: lwork
-         integer :: info,ilo,ihi
-         integer :: nfound
-         integer :: c1,i,c,j
-         double precision :: abstol,ellow,elup,abnrm,bbnrm,norm,max_diff
-         double precision,allocatable,dimension(:,:) :: vr
-         double precision,allocatable,dimension(:) :: alphar
-         double precision,allocatable,dimension(:) :: alphai
-         double precision,allocatable,dimension(:) :: beta
-         double precision,allocatable,dimension(:,:) :: vl
-         double precision,allocatable,dimension(:) :: scale
-         double precision,allocatable,dimension(:) :: rconde
-         double precision,allocatable,dimension(:) :: rcondv
-         logical,allocatable,dimension(:) :: bwork
-         double precision,allocatable,dimension(:) :: lscale,rscale
-         real,allocatable,dimension(:,:) :: temp_O
-         integer, allocatable :: isuppz(:)
-         abstol = -1
-         sys%num_ortho = sys%ncutoff!sys%nex*(sys%nex+1)
-         allocate(temp_O(sys%num_ortho,sys%num_ortho))
-         temp_O = ham%O 
-         allocate(work(30*sys%num_ortho))
-         allocate(iwork(sys%num_ortho*12))
-         allocate(ifail(sys%num_ortho))
-         allocate(vr(sys%num_ortho,sys%num_ortho))
-         allocate(alphar(sys%num_ortho))
-         allocate(alphai(sys%num_ortho))
-         allocate(vl(sys%num_ortho,sys%num_ortho))
-         allocate(scale(sys%num_ortho))
-         allocate(rconde(sys%num_ortho))
-         allocate(rcondv(sys%num_ortho))
-         allocate(bwork(sys%num_ortho))
-         allocate(beta(sys%num_ortho)) 
-         allocate(lscale(sys%num_ortho))
-         allocate(rscale(sys%num_ortho))
-         allocate(isuppz(2*sys%num_ortho))
-         lwork = 30*sys%num_ortho
-      
-
-         z = sys%ncutoff!sys%num_ortho
-         !do i = 1, z
-         !   ham%O(i,i) = ham%O(i,i) + 0.0000001
-         !end do
-         !print*,z
-         !call dpotrf('U', z, ham%O, z, info)   ! LAPACK Cholesky
-         !if (info /= 0) stop "Overlap matrix O is not positive-definite"
-
-         max_diff = 0.0d0
-         do i = 1, 20
-          !do j = i+1, 20
-            ham%O(i,i) = ham%O(i,i) + 0.00001
-          !end do
-         end do
-         print *, "Max asymmetry in matrix: ", max_diff
-         call dsyevr('V','A','U',z,ham%O,z,ellow,elup,1,z, &
-                 abstol,nfound,alphar,vr,z,isuppz,work,lwork,iwork,sys%num_ortho*12,info)
-
-
-         !call dgeevx('N', 'N', 'V', 'N', z, ham%O, z, &
-       !alphar, alphai, vl, z, vr, z, &
-       !ilo,ihi, RSCALE, bbnrm, &
-       !rconde, rcondv, work, lwork, iwork, info)
-         c =0
-         do i = 1,sys%num_ortho
-       !              !print*,alphar(i),alphai(i),beta(i)
-           norm = dot_product(vr(:,i),matmul(temp_O,vr(:,i)))
-           if(abs(norm) .ge. 0.0001)then 
-              c = c+1
-           end if
-       !    print*,i,"th eigenvector"
-       !    
-            print*,(alphar(i))!*27.2114)
-       !     print*,(norm)
-           !print*,vr(:,i)
-!
-       !     
-       !     !beta = matmul(ham%c,vr(:,i))
-       !     !abnrm = norm2(beta) 
-       !     !print*,beta/abnrm
-       !     !print*,vr(:,i)
-         end do
-        ! z = sys%num_ortho
-         sys%num_ortho = c
-         z =c
-         allocate(ham%c(sys%nex*(sys%nex+1),sys%num_ortho))
-         c =0
-         do i = 1,(sys%nex*(sys%nex+1))
-            norm = dot_product(vr(:,i),matmul(temp_O,vr(:,i)))
-            if(abs(alphar(i)) .ge. 0.001)then
-              
-              c = c+1
-               
-!
-              ham%c(:,c) = vr(:,i)/(sqrt(alphar(i)))
-              norm = dot_product(ham%c(:,c),matmul(temp_O,ham%c(:,c)))
-              !print*,alphar(i)
-              print*,norm
-                 !print*,"c",c,ham%c(:,c)
-            end if
-         end do
-                  
-      end subroutine solve_eigenvalue_O
 
    subroutine solve_eigenvalue_H
    ! diagonalize Hamiltonian ham%h using lapck routine dsyevx
       integer :: z
-      double precision,allocatable,dimension(:) :: work
+      complex(kind=8),allocatable,dimension(:) :: work
       integer,allocatable,dimension(:) :: iwork
       integer,allocatable,dimension(:) :: ifail
       integer :: lwork
@@ -596,7 +333,7 @@ module solve_generalized_eigenvalue_problem
       integer :: nfound
       integer :: c1,i
       double precision :: abstol,ellow,elup,abnrm,bbnrm
-      double precision,allocatable,dimension(:,:) :: vr
+      complex(kind=8),allocatable,dimension(:,:) :: vr
       double precision,allocatable,dimension(:) :: alphar
       double precision,allocatable,dimension(:) :: alphai
       double precision,allocatable,dimension(:) :: beta
@@ -604,22 +341,14 @@ module solve_generalized_eigenvalue_problem
       double precision,allocatable,dimension(:) :: scale
       double precision,allocatable,dimension(:) :: rconde
       double precision,allocatable,dimension(:) :: rcondv
+      double precision, allocatable,dimension(:) :: rwork
       logical,allocatable,dimension(:) :: bwork
       double precision,allocatable,dimension(:) :: lscale,rscale
-      double precision,allocatable,dimension(:,:) :: H1,O1
-      abstol = -1
-      sys%num_ortho = sys%lin_ind
-      print*,"sys%num_ortho",sys%num_ortho
-      !sys%num_ortho = sys%nex*(sys%nex+1)
-      allocate(H1(sys%lin_ind,sys%lin_ind))
-      H1 = 0.0
-     ! allocate(O1(sys%num_ortho,sys%num_ortho))
-
-         H1 = matmul(transpose(ham%c(:,1:sys%lin_ind)),matmul(ham%H,ham%c(:,1:sys%lin_ind)))
-         print*,"Hihihi"
-      !O1 = ham%O !+ transpose(ham%O)/2
-     ! allocate(work(8*sys%num_ortho))
-      allocate(iwork(sys%num_ortho+6))
+      sys%num_ortho = ham%l
+      abstol = -1.0
+      allocate(rwork(7*sys%num_ortho))
+      allocate(work(20*sys%num_ortho))
+      allocate(iwork(5*sys%num_ortho))
       allocate(ifail(sys%num_ortho))
       allocate(vr(sys%num_ortho,sys%num_ortho))
       allocate(alphar(sys%num_ortho))
@@ -632,44 +361,26 @@ module solve_generalized_eigenvalue_problem
       allocate(beta(sys%num_ortho)) 
       allocate(lscale(sys%num_ortho))
       allocate(rscale(sys%num_ortho))
-      lwork = -1
-      allocate(work(1))
+      lwork = 20*sys%num_ortho
       z = sys%num_ortho
-      !print*,ham%O(1,1),ham%O(1,2),ham%O(2,1),ham%O(2,2)
-      call dsyevx('V','I','U',z,H1,z,ellow,elup,1,z, &
-              abstol,nfound,alphar,vr,z,work,lwork,iwork,ifail,info)
-      lwork = int(work(1))
-      deallocate(work)
-      allocate(work(lwork)) 
-
-      call dsyevx('V','I','U',z,H1,z,ellow,elup,1,z, &
-              abstol,nfound,alphar,vr,z,work,lwork,iwork,ifail,info)
-      !call dsyevx('V','I','U',z,ham%O,z,ellow,elup,1,z, &
-      !        abstol,nfound,alphar,vr,z,work,lwork,iwork,ifail,info)
-      !print*,"ifail",ifail
-   !   call dgeevx('N', 'N', 'V', 'N', z, ham%H, z, &
-   ! alphar, alphai, vl, z, vr, z, &
-   ! ilo,ihi, RSCALE, bbnrm, &
-   ! rconde, rcondv, work, lwork, iwork, info)
-     ! call dggev('N', 'V', z, ham%H, z, ham%O, z, alphar, alphai, beta, vl, z, vr, z, work, lwork, info)
-     ! lwork = int(work(1))
-     ! deallocate(work)
-     ! allocate(work(lwork)) 
-     ! call dggev('N', 'V', z, ham%H, z, ham%O, z, alphar, alphai, beta, vl, z, vr, z, work, lwork, info) 
-     ! print*,info
+      print*,"sys%num_ortho",sys%num_ortho
+      call zheevx('V','I','U',z,ham%O,z,ellow,elup,1,z, &
+               abstol,nfound,alphar,vr,z,work,lwork,rwork,iwork,ifail,info)
+      !call zgeevx('N', 'N', 'V', 'N', z, ham%H, z, &
+    !alphar, alphai, vl, z, vr, z, &
+    !ilo,ihi, RSCALE, bbnrm, &
+    !rconde, rcondv, work, lwork, iwork, info)
+      
       do i = 1,sys%num_ortho
                   !print*,alphar(i),alphai(i),beta(i)
         print*,i,"th eigenvector"
          print*,(alphar(i)*27.2114)
-         !print*,(alphar(i)/beta(i)*27.2114)
-         
+       
          !beta = matmul(ham%c,vr(:,i))
          !abnrm = norm2(beta) 
          !print*,beta/abnrm
          !print*,vr(:,i)
       end do
-
-   
    end subroutine solve_eigenvalue_H
 
 end module solve_generalized_eigenvalue_problem

@@ -12,7 +12,7 @@ module compute_lambda_and_xi
         integer :: c,cp,v,vp
         integer :: ik
         integer :: imQl,imQr,ikp
-        double precision :: mQl(3),mQr(3),kp(3)
+        double precision :: mQl(3),mQr(3),kp(3),kp2(3)
         complex(kind=16),intent(inout) :: lambda1
         complex(kind=16) :: sum1
         complex(kind=16) :: AI_ck_vkmQr,AJ_cpkp_vpkppQr,AM_ck_vpkmQl,AN_cpkp_vkppQl
@@ -29,7 +29,15 @@ module compute_lambda_and_xi
         !call cpu_time(loop_start)
         do ik = 1,sys%nk !k
            kp = sys%kpts(:,ik) -sys%Qpts(:,iQ_r) - sys%Qpts(:,iQ_l)
+           kp2 = kp
+
            call kpoint_to_index(kp,ikp)
+           if(ikp == -1) then
+               !print*, "Warning: kpoint index mismatch in compute_lambda_tttt"
+               print*, "ik,ikp,iQ_r,iQ_l", ik,ikp,iQ_r,iQ_l
+               print*, "kp", kp(1),kp(2),kp(3)
+               print*, "kp2", kp2(1),kp2(2),kp2(3)
+           end if
            do cp=1,sys%nc ! c'
             do vp = 1,sys%nv !v'
                 do c = 1,sys%nc !c
@@ -41,6 +49,7 @@ module compute_lambda_and_xi
                         AN_cpkp_vkppQl = exciton_sys%eigenvectors_t(1,v,cp,ikp,N,imQl)
                         sum1 = sum1 + (conjg(AN_cpkp_vkppQl) * &
                                        conjg(AM_ck_vpkmQl) * AJ_cpkp_vpkppQr * AI_ck_vkmQr)
+
                         
                         ! use complex conjugate for complex eigen vectors
                         ! sum2 = sum2 + (exciton_sys%eigenvectors(J,x,y)*exciton_sys%eigenvectors(I,s,t) &

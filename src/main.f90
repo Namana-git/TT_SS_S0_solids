@@ -4,31 +4,42 @@ program mol_shiva
     use input_read
     use kpoints
     !use sort
-    !use solve_generalized_eigenvalue_problem
+    use solve_generalized_eigenvalue_problem
     !use solve_generalized_eigenvalue_problem
     !use sort
     implicit none
 
     double precision :: start_time,end_time
     double precision :: kpt(3), kpt1(3), kpt2(3), kpt3(3), kpt4(3), kpt5(3), kpt6(3), kpt7(3)
+    double precision :: Qkpt(3), Qpt1(3), Qpt2(3), Qpt3(3)
     integer :: index 
     integer :: error
-    sys%nQ = 2
-    sys%neb = 64*2*2
-    sys%nc = 2
-    sys%nv = 2
-
+    sys%nQ = 4
+    sys%nc = 1
+    sys%nv = 1
+    sys%neb = 4*1*1
     call read_kpoints()
-   ! call read_Qpoints()
-    !call read_triplet_exciton_eigenvalues()
+    call read_Qpoints()
+    call read_triplet_exciton_eigenvalues()
    
     call read_triplet_exciton_eigenvectors()
 
-    !kpt = [0.00,0.00,1.0]
-    !kpt1 = [0.00,0.00,0.5]
-    !kpt2 = [0.00,0.00,0.25]
-    !kpt3 = [0.00,0.00,0.75]
-    !kpt4 = [0.00,0.00,0.0]
+   
+
+    !Qkpt = [0.00,0.00,0.0]
+    !Qpt1 = [0.00,0.00,-0.25]
+    !Qpt2 = [0.00,0.00,-0.5]
+    !Qpt3 = [0.00,0.00,0.25]
+
+   ! call Qpoint_to_index(Qkpt,index)
+   ! print*, "Index of Qkpt ", index,sys%Qpts(1,index),sys%Qpts(2,index),sys%Qpts(3,index)
+   ! call Qpoint_to_index(Qpt1,index)
+   ! print*, "Index of Qpt1 ", index,sys%Qpts(1,index),sys%Qpts(2,index),sys%Qpts(3,index)
+    !call Qpoint_to_index(Qpt2,index)    
+    !print*, "Index of Qpt2 ", index,sys%Qpts(1,index),sys%Qpts(2,index),sys%Qpts(3,index)
+    !call Qpoint_to_index(Qpt3,index)
+    !print*, "Index of Qpt3 ", index,sys%Qpts(1,index),sys%Qpts(2,index),sys%Qpts(3,index)
+    !kpt4 = [0.00,0.00,0.5]
     !kpt5 = [0.00,0.00,-0.5]
     !kpt6 = [0.00,0.00,-0.25]
     !kpt7 = [0.00,0.00,-0.75]
@@ -52,11 +63,11 @@ program mol_shiva
   !  call kpoint_to_index(kpt2,index)
   !  print*, "Index of kpt2 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
   !  call kpoint_to_index(kpt3,index)        
-  !  print*, "Index of kpt3 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
-  !  call kpoint_to_index(kpt4,index)
-  !  print*, "Index of kpt4 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
-  !  call kpoint_to_index(kpt5,index)
-  !  print*, "Index of kpt5 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
+  ! print*, "Index of kpt3 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
+    !call kpoint_to_index(kpt4,index)
+    !print*, "Index of kpt4 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
+    !call kpoint_to_index(kpt5,index)
+  !  print*, "Index of kpt5", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
   !  call kpoint_to_index(kpt6,index)
   !  print*, "Index of kpt6 ", index,sys%kpts(1,index),sys%kpts(2,index),sys%kpts(3,index)
   !  call kpoint_to_index(kpt7,index)
@@ -92,12 +103,12 @@ program mol_shiva
     !sys%nv = 20
     !sys%nc = 40
     !call sort_energy()
-
+    
    ! call sort_energy()
      !print*,"hey"
     !compute A and B Hamiltonian from lambda and xi matrices
     !call compute_all_lambda()
-    !call compute_lambda()
+    call compute_lambda()
   !  call compute_xi()
   !  call construct_AB_SS()
   !  call construct_AB_TT()q
@@ -110,7 +121,7 @@ program mol_shiva
     !call compute_xi()
     !call compute_xi_in()
     !call compute_TT_matrix()
-   !call solve_eigenvalue_overlap()
+   call solve_eigenvalue_overlap()
   ! call solve_eigenvalue_O()
     !call compute_H_ortho1()
    !call solve_eigenvalue_H()
