@@ -15,9 +15,9 @@ module global_variables
 
     type :: exciton
         double precision, allocatable :: eigenvalues_s(:,:) !I,Q
-        complex(kind=16), allocatable :: eigenvectors_s(:,:,:,:,:,:) !s,v,c,k,I,Q
+        complex(kind=8), allocatable :: eigenvectors_s(:,:,:,:,:,:) !s,v,c,k,I,Q
         double precision, allocatable :: eigenvalues_t(:,:)!I,Q
-        complex(kind=16), allocatable :: eigenvectors_t(:,:,:,:,:,:) !s,v,c,k,I,Q
+        complex(kind=8), allocatable :: eigenvectors_t(:,:,:,:,:,:) !s,v,c,k,I,Q
         integer , allocatable :: I_arr(:),J_arr(:),spin_ind(:)
     end type exciton
     type(exciton) :: exciton_sys
@@ -29,16 +29,16 @@ module global_variables
           integer :: l
           double precision, allocatable :: A_tttt(:,:,:,:),A_ssss(:,:,:,:),A_sstt(:,:,:,:),A_ttss(:,:,:,:)
           double precision, allocatable :: B_tttt(:,:,:,:),B_ssss(:,:,:,:),B_sstt(:,:,:,:),B_ttss(:,:,:,:)
-          complex(kind=16), allocatable :: lambda_tttt(:,:,:,:,:,:),lambda_ssss(:,:,:,:,:,:)
-          complex(kind=16), allocatable :: lambda_sstt(:,:,:,:,:,:),lambda_ttss(:,:,:,:,:,:)  
-          double precision, allocatable :: xi_d_tttt(:,:,:,:),xi_d_ssss(:,:,:,:)
-          double precision, allocatable :: xi_x_tttt(:,:,:,:),xi_x_ssss(:,:,:,:)
-          double precision, allocatable :: xi_d_in_tttt(:,:,:,:),xi_d_in_ssss(:,:,:,:)
-          double precision, allocatable :: xi_x_in_tttt(:,:,:,:),xi_x_in_ssss(:,:,:,:)
-          double precision, allocatable :: xi_d_in_ttss(:,:,:,:),xi_d_in_sstt(:,:,:,:)
-          double precision, allocatable :: xi_x_in_ttss(:,:,:,:),xi_x_in_sstt(:,:,:,:)
-          double precision, allocatable :: xi_x_ttss(:,:,:,:),xi_x_sstt(:,:,:,:)
-          complex(kind=16),allocatable :: H(:,:),O(:,:),c(:,:)
+          complex(kind=8), allocatable :: lambda_tttt(:,:,:,:,:,:),lambda_ssss(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: lambda_sstt(:,:,:,:,:,:),lambda_ttss(:,:,:,:,:,:)  
+          complex(kind=8), allocatable :: xi_d_tttt(:,:,:,:,:,:),xi_d_ssss(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_x_tttt(:,:,:,:,:,:),xi_x_ssss(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_d_in_tttt(:,:,:,:,:,:),xi_d_in_ssss(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_x_in_tttt(:,:,:,:,:,:),xi_x_in_ssss(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_d_in_ttss(:,:,:,:,:,:),xi_d_in_sstt(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_x_in_ttss(:,:,:,:,:,:),xi_x_in_sstt(:,:,:,:,:,:)
+          complex(kind=8), allocatable :: xi_x_ttss(:,:,:,:,:,:),xi_x_sstt(:,:,:,:,:,:)
+          complex(kind=8),allocatable :: H(:,:),O(:,:),c(:,:)
     end  type Hamiltonian
 
     

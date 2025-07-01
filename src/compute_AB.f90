@@ -22,7 +22,7 @@ contains
        integer :: I,J,M,N
        integer :: iQ_r,iQ_l
        integer :: c1,c2
-       complex(kind=16) :: lambda1,lambda2,lambda3,lambda4
+       complex(kind=8) :: lambda1,lambda2,lambda3,lambda4
        !double precision,allocatable,dimension(:,:,:,:) :: bsemat
         print*,"hey4"    
     
@@ -96,210 +96,182 @@ contains
        !close(10)
     
     end subroutine compute_lambda
-   ! subroutine compute_xi()
+    subroutine compute_xi()
+
+        implicit none
+        integer :: I,J,M,N
+        integer :: iQ_r,iQ_l
+        integer :: c1,c2
+        complex(kind=8) :: xi_ee1_tttt,xi_ee2_tttt,xi_ee1_ssss,xi_ee2_ssss,xi_ee1_ttss,xi_ee2_ttss,xi_ee1_sstt,xi_ee2_sstt, &
+                            xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_ttss,xi_hh2_ttss,xi_hh1_sstt,xi_hh2_sstt, &
+                            xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss, &
+                            xi_out_ehd1_tttt,xi_out_ehd2_tttt,xi_out_ehd1_ssss,xi_out_ehd2_ssss,xi_out_ehd1_sstt,xi_out_ehd2_sstt,xi_out_ehd1_ttss,xi_out_ehd2_ttss, &
+                            xi_in_ehx1_tttt,xi_in_ehx2_tttt,xi_in_ehx1_ssss,xi_in_ehx2_ssss,xi_in_ehx1_sstt,xi_in_ehx2_sstt,xi_in_ehx1_ttss,xi_in_ehx2_ttss, &
+                            xi_out_ehx1_tttt,xi_out_ehx2_tttt,xi_out_ehx1_ssss,xi_out_ehx2_ssss,xi_out_ehx1_sstt,xi_out_ehx2_sstt,xi_out_ehx1_ttss,xi_out_ehx2_ttss
+        complex(kind=8),allocatable,dimension(:,:,:,:,:,:,:) :: bsemat_ee,bsemat_hh,bsemat_d,bsemat_x
+     
+       ! ham%lambda = 0.0 
+        !lambda1 = 0.0    
+        !allocate(ham%lambda(sys%nex,sys%nex,sys%nex,sys%nex))
+        !allocate(ham%lambda_e(sys%nex,sys%nex,sys%nex,sys%nex))
+        allocate(ham%xi_d_tttt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        allocate(ham%xi_x_tttt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        allocate(ham%xi_d_in_tttt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_d_ssss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_ssss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_d_in_ssss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_in_ssss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_d_in_sstt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_in_sstt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_sstt(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_d_in_ttss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_in_ttss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !allocate(ham%xi_x_ttss(sys%neb,sys%neb,sys%neb,sys%neb,sys%nQ,sys%nQ))
+        !ham%lambda = 0.0
+        !ham%lambda_e = 0.0
+        ham%xi_d_tttt = cmplx(0.0,0.0)
+        ham%xi_x_tttt = cmplx(0.0,0.0)
+        ham%xi_d_in_tttt = cmplx(0.0,0.0)
+       ! ham%xi_d_ssss = 0.0
+       ! ham%xi_x_ssss = 0.0
+       ! ham%xi_d_in_ssss = 0.0
+       ! ham%xi_x_in_ssss = 0.0
+       ! ham%xi_x_in_sstt = 0.0
+       ! ham%xi_x_sstt = 0.0
+       ! ham%xi_d_in_sstt = 0.0
+       ! ham%xi_d_in_ttss = 0.0
+       ! ham%xi_x_in_ttss = 0.0
+       ! ham%xi_x_ttss = 0.0
+        !print*,"hello1"
+        !
+       ! print*,"hey6"
+
+     
+        !allocate(bsemat_d(sys%nb,sys%nb,sys%nb,sys%nb))
+        !allocate(bsemat_x(sys%nb,sys%nb,sys%nb,sys%nb))
+        !bsemat_d = 0.0
+        !bsemat_x = 0.0
+        !print*,"hello4"
+         allocate(bsemat_ee(sys%nc,sys%nc,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ))
+         bsemat_ee = cmplx(0.0,0.0)
+         call read_bsemat_ee(bsemat_ee)
+         allocate(bsemat_hh(sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk,sys%nQ))
+         bsemat_hh = cmplx(0.0,0.0)
+         call read_bsemat_hh(bsemat_hh)
+         allocate(bsemat_d(sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ))
+         bsemat_d = cmplx(0.0,0.0)
+         call read_bsemat_d(bsemat_d)
+        !call read_bsemat_d(bsemat_d)
+        !call read_bsemat_x(bsemat_x)
+        print*,"hello5"
+       
+         c1 = 0 
+         c2 = 0
+        ! open(UNIT=10, FILE="lambda.dat", STATUS="REPLACE")
+         do iQ_r = 1,sys%nQ
+          do iQ_l = 1,sys%nQ
+            do M = 1,sys%neb
+              do N = 1,sys%neb
+                 do I = 1,sys%neb
+                    do J = 1,sys%neb
+                       call compute_xi_ee1(I,J,M,N,iQ_r,iQ_l,bsemat_ee,xi_ee1_tttt,xi_ee1_ssss,xi_ee1_sstt,xi_ee1_ttss)
+                       call compute_xi_ee2(I,J,M,N,iQ_r,iQ_l,bsemat_ee,xi_ee2_tttt,xi_ee2_ssss,xi_ee2_sstt,xi_ee2_ttss)
+                       call compute_xi_hh1(I,J,M,N,iQ_r,iQ_l,bsemat_hh,xi_hh1_tttt,xi_hh1_ssss,xi_hh1_sstt,xi_hh1_ttss)
+                       call compute_xi_hh2(I,J,M,N,iQ_r,iQ_l,bsemat_hh,xi_hh2_tttt,xi_hh2_ssss,xi_hh2_sstt,xi_hh2_ttss)
+                       call compute_xi_in_ehd1(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd1_ssss,xi_in_ehd1_sstt,xi_in_ehd1_ttss)
+                       call compute_xi_in_ehd2(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_in_ehd2_tttt,xi_in_ehd2_ssss,xi_in_ehd2_sstt,xi_in_ehd2_ttss)
+                    !call compute_xi_hh(I,J,M,N,bsemat_d,xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_sstt,xi_hh2_sstt,xi_hh1_ttss,xi_hh2_ttss)
+                    !call compute_xi_in_ehd(I,J,M,N,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss)   
+                    !call compute_xi_out_ehd(I,J,M,N,bsemat_d,xi_out_ehd1_tttt,xi_out_ehd2_tttt,xi_out_ehd1_ssss,xi_out_ehd2_ssss,xi_out_ehd1_sstt,xi_out_ehd2_sstt,xi_out_ehd1_ttss,xi_out_ehd2_ttss)
+                    !call compute_xi_in_ehx(I,J,M,N,bsemat_x,xi_in_ehx1_tttt,xi_in_ehx2_tttt,xi_in_ehx1_ssss,xi_in_ehx2_ssss,xi_in_ehx1_sstt,xi_in_ehx2_sstt,xi_in_ehx1_ttss,xi_in_ehx2_ttss)
+                    !call compute_xi_out_ehx(I,J,M,N,bsemat_x,xi_out_ehx1_tttt,xi_out_ehx2_tttt,xi_out_ehx1_ssss,xi_out_ehx2_ssss,xi_out_ehx1_sstt,xi_out_ehx2_sstt,xi_out_ehx1_ttss,xi_out_ehx2_ttss)
+                    !print*,"hello7"
+                    !ham%xi_d_ssss(I,J,M,N) = xi_ee1_ssss + xi_hh1_ssss  - xi_in_ehd1_ssss - xi_out_ehd1_ssss
+                    !ham%xi_x_ssss(I,J,M,N) = xi_in_ehx1_ssss + xi_out_ehx1_ssss
+                    !ham%xi_d_in_ssss(I,J,M,N) = xi_ee2_ssss + xi_hh2_ssss  - xi_in_ehd2_ssss - xi_out_ehd2_ssss
+                    !ham%xi_x_in_ssss(I,J,M,N) = xi_in_ehx2_ssss + xi_out_ehx2_ssss
+                     !print*,"hello8"
+                    ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l) = xi_hh1_tttt!xi_ee1_tttt !+ xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
+                    !ham%xi_x_tttt(I,J,M,N) = xi_in_ehx1_tttt + xi_out_ehx1_tttt
+                    ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l) = xi_hh2_tttt!xi_ee2_tttt !+ xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
+                    !ham%xi_x_in_tttt(I,J,M,N) = xi_in_ehx2_tttt + xi_out_ehx2_tttt
+                     !print*,"hello8"
+                    !ham%xi_d_sstt(I,J,M,N) = xi_ee1_sstt + xi_hh1_sstt  - xi_in_ehd1_sstt - xi_out_ehd1_sstt
+                    !ham%xi_x_sstt(I,J,M,N) = xi_in_ehx1_sstt + xi_out_ehx1_sstt
+                    !ham%xi_d_in_sstt(I,J,M,N) = xi_ee2_sstt + xi_hh2_sstt  - xi_in_ehd2_sstt - xi_out_ehd2_sstt
+                    !ham%xi_x_in_sstt(I,J,M,N) = xi_in_ehx2_sstt + xi_out_ehx2_sstt
+                    !ham%xi_d_ttss(I,J,M,N) = xi_ee1_ttss + xi_hh1_ttss  - xi_in_ehd1_ttss - xi_out_ehd1_ttss
+                    !ham%xi_x_ttss(I,J,M,N) = xi_in_ehx1_ttss + xi_out_ehx1_ttss
+                    !ham%xi_d_in_ttss(I,J,M,N) = xi_ee2_ttss + xi_hh2_ttss  - xi_in_ehd2_ttss - xi_out_ehd2_ttss
+                    !ham%xi_x_in_ttss(I,J,M,N) = xi_in_ehx2_ttss + xi_out_ehx2_ttss
+
+                    !print*,I,J,M,N,ham%xi_x_ssss(I,J,M,N),ham%xi_x_tttt(I,J,M,N),ham%xi_x_sstt(I,J,M,N),ham%xi_x_ttss(I,J,M,N)
+                    !print*,xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),xi_d_tttt(I,J,M,N,iQ_r,iQ_l)
+                  end do
+               end do
+             end do
+           end do
+         end do
+       end do
+       print*,"hello6"
+     
+         !close(10)
+     
+     end subroutine compute_xi
+
+      subroutine debug_xi()
+          integer :: I,J,M,N,R,S
+          integer :: iQ_r,iQ_l,iQ_m
+          complex(kind=8) :: sum
+         do iQ_r = 1,sys%nQ
+           do iQ_l = 1,sys%nQ
+            do M = 1,sys%neb
+              do N = 1,sys%neb
+                do I = 1,sys%neb
+                  do J = 1,sys%neb
+                     sum = cmplx(0.0,0.0)
+                    do iQ_m = 1,sys%nQ
+                      do R = 1,sys%neb
+                        do S = 1,sys%neb
+                          ! print*,"hey9"
+                           sum = sum + ham%lambda_tttt(R,S,M,N,iQ_m,iQ_l)*ham%xi_d_tttt(I,J,R,S,iQ_r,iQ_m)
+                           ! if(I==2 .and. J==1 .and. M==1 .and. N==2 .and. iQ_r==1 .and. iQ_l==1) then
+                            !  print*,"RSQMN,lambda",R,S,iQ_m,M,n,ham%lambda_tttt(R,S,M,N,iQ_m,iQ_l)
+                             ! print*,"IJRSQ,xi",I,J,R,S,iQ_m,ham%xi_d_tttt(I,J,R,S,iQ_r,iQ_m)
+                        !print*,"debug xi_d_in_tttt",I,J,M,N,iQ_r,iQ_l,ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),sum
+                     ! print*,"debug xi_d_in_tttt",I,J,M,N,iQ_r,iQ_l,ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),sum
+                    !end if
+                    !print*,"debug xi_d_in_tttt",ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l),ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)
+                    !print*,"hey",I,J,M,N,iQ_r,iQ_l,abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum)
+                     !end if
+                        
+                        end do
+                        end do
+                    end do
+                    print*,"debug xi_d_in_tttt",I,J,M,N,iQ_r,iQ_l,abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum)
+                    if(abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum) > 1.0d-6) then
+                      !print*,"yellow,yellow"
+                     print*,"debug",I,J,M,N,iQ_r,iQ_l,ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l),ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),sum
+                    end if
+                  end do
+                end do  
+               end do
+            end do
+           end do
+         end do
+                           
+                       
+
+      end subroutine debug_xi
+
 !
-   !     implicit none
-   !     integer :: I,J,M,N
-   !     integer :: c1,c2
-   !     double precision :: xi_ee1_tttt,xi_ee2_tttt,xi_ee1_ssss,xi_ee2_ssss,xi_ee1_ttss,xi_ee2_ttss,xi_ee1_sstt,xi_ee2_sstt, &
-   !                         xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_ttss,xi_hh2_ttss,xi_hh1_sstt,xi_hh2_sstt, &
-   !                         xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss, &
-   !                         xi_out_ehd1_tttt,xi_out_ehd2_tttt,xi_out_ehd1_ssss,xi_out_ehd2_ssss,xi_out_ehd1_sstt,xi_out_ehd2_sstt,xi_out_ehd1_ttss,xi_out_ehd2_ttss, &
-   !                         xi_in_ehx1_tttt,xi_in_ehx2_tttt,xi_in_ehx1_ssss,xi_in_ehx2_ssss,xi_in_ehx1_sstt,xi_in_ehx2_sstt,xi_in_ehx1_ttss,xi_in_ehx2_ttss, &
-   !                         xi_out_ehx1_tttt,xi_out_ehx2_tttt,xi_out_ehx1_ssss,xi_out_ehx2_ssss,xi_out_ehx1_sstt,xi_out_ehx2_sstt,xi_out_ehx1_ttss,xi_out_ehx2_ttss
-   !     double precision,allocatable,dimension(:,:,:,:) :: bsemat_d,bsemat_x
-   !  
-   !    ! ham%lambda = 0.0 
-   !     !lambda1 = 0.0    
-   !     sys%nb = sys%nc+sys%nv
-   !     !allocate(ham%lambda(sys%nex,sys%nex,sys%nex,sys%nex))
-   !     !allocate(ham%lambda_e(sys%nex,sys%nex,sys%nex,sys%nex))
-   !     allocate(ham%xi_d_tttt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_tttt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_d_in_tttt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_d_ssss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_ssss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_d_in_ssss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_in_ssss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_d_in_sstt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_in_sstt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_sstt(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_d_in_ttss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_in_ttss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     allocate(ham%xi_x_ttss(sys%nex_max,sys%nex_max,sys%nex_max,sys%nex_max))
-   !     !ham%lambda = 0.0
-   !     !ham%lambda_e = 0.0
-   !     ham%xi_d_tttt = 0.0
-   !     ham%xi_x_tttt = 0.0
-   !     ham%xi_d_in_tttt = 0.0
-   !     ham%xi_d_ssss = 0.0
-   !     ham%xi_x_ssss = 0.0
-   !     ham%xi_d_in_ssss = 0.0
-   !     ham%xi_x_in_ssss = 0.0
-   !     ham%xi_x_in_sstt = 0.0
-   !     ham%xi_x_sstt = 0.0
-   !     ham%xi_d_in_sstt = 0.0
-   !     ham%xi_d_in_ttss = 0.0
-   !     ham%xi_x_in_ttss = 0.0
-   !     ham%xi_x_ttss = 0.0
-   !     !print*,"hello1"
-   !     !
-   !    ! print*,"hey6"
+   !  subroutine construct_A_TT()
+   !  ! A_{MN,IJ} = (E_{M} + E_{N})\delta_{MN,IJ) +  xi_d_tttt(IJMN) + 3/2 * xi_x_tttt(IJMN) &
+   !  ! + 1/2* (E_{I}+E_{J})*(lambda_h(IJMN)+lambda_e(IJMN)) &
+   !  ! +1/2*(xi_d_in_tttt(IJMN) + xi_d_im_tttt(IJNM)
+   !   
 !
-   !  
-   !     allocate(bsemat_d(sys%nb,sys%nb,sys%nb,sys%nb))
-   !     allocate(bsemat_x(sys%nb,sys%nb,sys%nb,sys%nb))
-   !     bsemat_d = 0.0
-   !     bsemat_x = 0.0
-   !     !print*,"hello4"
-   !     !
-   !     call read_bsemat_d(bsemat_d)
-   !     call read_bsemat_x(bsemat_x)
-   !     print*,"hello5"
-   !    
-   !      c1 = 0 
-   !      c2 = 0
-   !     ! open(UNIT=10, FILE="lambda.dat", STATUS="REPLACE")
-   !  
-   !      do M = 1,sys%nex_max
-   !        do N = 1,sys%nex_max
-   !            do I = 1,sys%nex_max
-   !                do J = 1,sys%nex_max
-   !                 !call compute_xi_ee_tttt(I,J,M,N,bsemat_d,xi_ee1,xi_ee2)
-   !                 !print*,"xi_ee",I,J,M,N,xi_ee1
-   !                 !call compute_xi_hh_tttt(I,J,M,N,bsemat_d,xi_hh1,xi_hh2)
-   !                 !print*,"xi_hh",I,J,M,N,xi_hh1
-   !                 !call compute_xi_in_ehd_tttt(I,J,M,N,bsemat_d,xi_in_ehd1,xi_in_ehd2)
-   !                 !print*,"xi_in_eh",I,J,M,N,xi_in_ehd1
-   !                 !call compute_xi_out_ehd_tttt(I,J,M,N,bsemat_d,xi_out_ehd1,xi_out_ehd2)
-   !                 !print*,"xi_out_eh",I,J,M,N,xi_out_ehd1
-   !                 !call compute_xi_in_ehx_tttt(I,J,M,N,bsemat_x,xi_in_ehx1,xi_in_ehx2)
-!
-   !                 !call compute_xi_out_ehx_tttt(I,J,M,N,bsemat_x,xi_out_ehx1,xi_out_ehx2)
-!
-   !                 !ham%xi_d_tttt(I,J,M,N) = xi_ee1 + xi_hh1  - xi_in_ehd1 - xi_out_ehd1
-   !                 !ham%xi_x_tttt(I,J,M,N) = xi_in_ehx1 + xi_out_ehx1
-   !                 !ham%xi_d_in_tttt(I,J,M,N) = xi_ee2 + xi_hh2 - xi_in_ehd2 - xi_out_ehd2
-!
-   !                 !if(I == 4 .and. J == 1 .and. M == 4 .and. N == 1) then
-   !                   !  print*,"xi_in_ehx",xi_in_ehx1
-   !                    ! print*,"xi_out_ehx",xi_out_ehx1
-   !                ! end if
-   !                 !xi_ee1 = 0.0
-   !                 !xi_ee2 = 0.0
-   !                 !xi_hh1 = 0.0
-   !                 !xi_hh2 = 0.0
-   !                 !xi_in_ehd1 = 0.0
-   !                 !xi_in_ehd2 = 0.0
-   !                 !xi_out_ehd1 = 0.0
-   !                 !xi_out_ehd2 = 0.0
-   !                 !xi_in_ehx1 = 0.0
-   !                 !xi_in_ehx2 = 0.0
-   !                 !xi_out_ehx1 = 0.0
-   !                 !xi_out_ehx2 = 0.0
-   !                 !call compute_xi_ee_ssss(I,J,M,N,bsemat_d,xi_ee1,xi_ee2)
-   !                 !call compute_xi_hh_ssss(I,J,M,N,bsemat_d,xi_hh1,xi_hh2)
-   !                 !call compute_xi_in_ehd_ssss(I,J,M,N,bsemat_d,xi_in_ehd1,xi_in_ehd2)
-   !                 !call compute_xi_out_ehd_ssss(I,J,M,N,bsemat_d,xi_out_ehd1,xi_out_ehd2)
-   !                 !call compute_xi_in_ehx_ssss(I,J,M,N,bsemat_x,xi_in_ehx1,xi_in_ehx2)
-   !                 !call compute_xi_out_ehx_ssss(I,J,M,N,bsemat_x,xi_out_ehx1,xi_out_ehx2)
-!!
-   !                 !ham%xi_d_ssss(I,J,M,N) = xi_ee1 + xi_hh1  - xi_in_ehd1 - xi_out_ehd1
-   !                 !ham%xi_x_ssss(I,J,M,N) = xi_in_ehx1 + xi_out_ehx1
-   !                 !ham%xi_d_in_ssss(I,J,M,N) = xi_ee2 + xi_hh2 - xi_in_ehd2 - xi_out_ehd2
-   !                 !ham%xi_x_in_ssss(I,J,M,N) = xi_in_ehx2 + xi_out_ehx2
-!!
-   !                 !xi_ee1 = 0.0
-   !                 !xi_ee2 = 0.0
-   !                 !xi_hh1 = 0.0
-   !                 !xi_hh2 = 0.0
-   !                 !xi_in_ehd1 = 0.0
-   !                 !xi_in_ehd2 = 0.0
-   !                 !xi_out_ehd1 = 0.0
-   !                 !xi_out_ehd2 = 0.0
-   !                 !xi_in_ehx1 = 0.0
-   !                 !xi_in_ehx2 = 0.0
-   !                 !xi_out_ehx1 = 0.0
-   !                 !xi_out_ehx2 = 0.0
-   !                 !
-!!
-!
-!
-!
-!
-   !                 !ham%xi_x_in_ssss(I,J,M,N) = 0.0
-   !                 !ham%xi_x_ssss(I,J,M,N) = 0.0
-   !                 !ham%xi_d_in_ssss(I,J,M,N) = 0.0
-   !                ! ham%xi_d_ssss(I,J,M,N) = 0.0
-   !                  !print*,"xi_ee",I,J,M,N,xi_ee1
-   !                  !print*,"xi_hh",I,J,M,N,xi_hh1
-   !                  !print*,"xi_in_eh",I,J,M,N,xi_in_ehd1
-   !                  !print*,"xi_out_eh",I,J,M,N,xi_out_ehd1
-   !                  !print*,"xi_in_ehx",I,J,M,N,xi_in_ehx1
-   !                  !print*,"xi_out_ehx",I,J,M,N,xi_out_ehx1
-   !                  !print*,"xi_ee",I,J,M,N,xi_ee2
-   !                  !print*,"xi_hh",I,J,M,N,xi_hh2
-   !                  !print*,"xi_in_eh",I,J,M,N,xi_in_ehd2
-   !                  !print*,"xi_out_eh",I,J,M,N,xi_out_ehd2
-   !                  !print*,"xi_in_ehx",I,J,M,N,xi_in_ehx2
-   !                  !print*,"xi_out_ehx",I,J,M,N,xi_out_ehx2
-   !                  !ham%xi_d_tttt(I,J,M,N) = 0.0
-   !                  !ham%xi_x_tttt(I,J,M,N) = 0.0
-   !                  !ham%xi_d_in_tttt(I,J,M,N) = 0.0
-   !           
-!
-   !                 !ham%xi_d_tttt(I,J,M,N) = 0.0
-   !                  !ham%xi_x_tttt(I,J,M,N) = 0.0
-   !                  !ham%xi_d_in_tttt(I,J,M,N) = 0.0
-   !                 
-   !                 !ham%xi_in(I,J,M,N) = xi_ee2 + xi_hh2  - xi_in_ehd2 - xi_out_ehd2
-!
-   !                 call compute_xi_ee(I,J,M,N,bsemat_d,xi_ee1_tttt,xi_ee2_tttt,xi_ee1_ssss,xi_ee2_ssss,xi_ee1_sstt,xi_ee2_sstt,xi_ee1_ttss,xi_ee2_ttss)
-   !                 call compute_xi_hh(I,J,M,N,bsemat_d,xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_sstt,xi_hh2_sstt,xi_hh1_ttss,xi_hh2_ttss)
-   !                 call compute_xi_in_ehd(I,J,M,N,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss)   
-   !                 call compute_xi_out_ehd(I,J,M,N,bsemat_d,xi_out_ehd1_tttt,xi_out_ehd2_tttt,xi_out_ehd1_ssss,xi_out_ehd2_ssss,xi_out_ehd1_sstt,xi_out_ehd2_sstt,xi_out_ehd1_ttss,xi_out_ehd2_ttss)
-   !                 call compute_xi_in_ehx(I,J,M,N,bsemat_x,xi_in_ehx1_tttt,xi_in_ehx2_tttt,xi_in_ehx1_ssss,xi_in_ehx2_ssss,xi_in_ehx1_sstt,xi_in_ehx2_sstt,xi_in_ehx1_ttss,xi_in_ehx2_ttss)
-   !                 call compute_xi_out_ehx(I,J,M,N,bsemat_x,xi_out_ehx1_tttt,xi_out_ehx2_tttt,xi_out_ehx1_ssss,xi_out_ehx2_ssss,xi_out_ehx1_sstt,xi_out_ehx2_sstt,xi_out_ehx1_ttss,xi_out_ehx2_ttss)
-   !                 !print*,"hello7"
-   !                 ham%xi_d_ssss(I,J,M,N) = xi_ee1_ssss + xi_hh1_ssss  - xi_in_ehd1_ssss - xi_out_ehd1_ssss
-   !                 ham%xi_x_ssss(I,J,M,N) = xi_in_ehx1_ssss + xi_out_ehx1_ssss
-   !                 ham%xi_d_in_ssss(I,J,M,N) = xi_ee2_ssss + xi_hh2_ssss  - xi_in_ehd2_ssss - xi_out_ehd2_ssss
-   !                 ham%xi_x_in_ssss(I,J,M,N) = xi_in_ehx2_ssss + xi_out_ehx2_ssss
-   !                  !print*,"hello8"
-   !                 ham%xi_d_tttt(I,J,M,N) = xi_ee1_tttt + xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
-   !                 ham%xi_x_tttt(I,J,M,N) = xi_in_ehx1_tttt + xi_out_ehx1_tttt
-   !                 ham%xi_d_in_tttt(I,J,M,N) = xi_ee2_tttt + xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
-   !                 !ham%xi_x_in_tttt(I,J,M,N) = xi_in_ehx2_tttt + xi_out_ehx2_tttt
-   !                  !print*,"hello8"
-   !                 !ham%xi_d_sstt(I,J,M,N) = xi_ee1_sstt + xi_hh1_sstt  - xi_in_ehd1_sstt - xi_out_ehd1_sstt
-   !                 ham%xi_x_sstt(I,J,M,N) = xi_in_ehx1_sstt + xi_out_ehx1_sstt
-   !                 ham%xi_d_in_sstt(I,J,M,N) = xi_ee2_sstt + xi_hh2_sstt  - xi_in_ehd2_sstt - xi_out_ehd2_sstt
-   !                 ham%xi_x_in_sstt(I,J,M,N) = xi_in_ehx2_sstt + xi_out_ehx2_sstt
-   !                 !ham%xi_d_ttss(I,J,M,N) = xi_ee1_ttss + xi_hh1_ttss  - xi_in_ehd1_ttss - xi_out_ehd1_ttss
-   !                 ham%xi_x_ttss(I,J,M,N) = xi_in_ehx1_ttss + xi_out_ehx1_ttss
-   !                 ham%xi_d_in_ttss(I,J,M,N) = xi_ee2_ttss + xi_hh2_ttss  - xi_in_ehd2_ttss - xi_out_ehd2_ttss
-   !                 ham%xi_x_in_ttss(I,J,M,N) = xi_in_ehx2_ttss + xi_out_ehx2_ttss
-!
-   !                 !print*,I,J,M,N,ham%xi_x_ssss(I,J,M,N),ham%xi_x_tttt(I,J,M,N),ham%xi_x_sstt(I,J,M,N),ham%xi_x_ttss(I,J,M,N)
-   !                
-   !               end do
-   !            end do
-   !        end do
-   !      end do
-   !       print*,"hello6"
-   !  
-   !      !close(10)
-   !  
-   !  end subroutine compute_xi
-!
-!!
-   !!  subroutine construct_A_TT()
-   !!  ! A_{MN,IJ} = (E_{M} + E_{N})\delta_{MN,IJ) +  xi_d_tttt(IJMN) + 3/2 * xi_x_tttt(IJMN) &
-   !!  ! + 1/2* (E_{I}+E_{J})*(lambda_h(IJMN)+lambda_e(IJMN)) &
-   !!  ! +1/2*(xi_d_in_tttt(IJMN) + xi_d_im_tttt(IJNM)
-   !!   
-!!
-   !!   implicit none
+   !   implicit none
    !!   integer :: I,J,M,N,I_ex,J_ex,M_ex,N_ex
    !!   integer :: c1,c2
 !!

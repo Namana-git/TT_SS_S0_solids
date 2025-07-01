@@ -294,60 +294,219 @@ module input_read
 !
  !end subroutine read_triplet_exciton_eigenvectors
  !
- ! subroutine read_bsemat_d(bsemat)
- !   double precision, dimension(sys%nb,sys%nb,sys%nb,sys%nb),intent(inout) :: bsemat
- !   character(len=9), parameter :: filename = "bsemat.h5"
- !   character(len=10), parameter :: name_1 = "/mats/head"
- !   character(len=10), parameter :: name_2 = "/mats/wing"
- !   character(len=10), parameter :: name_3 = "/mats/body"
- !   character(len=14), parameter :: name_4 = "/mats/exchange"
- !   double precision, DIMENSION(:,:,:,:,:,:,:), allocatable :: data1_out
- ! 
- !   integer(hid_t) :: file_id
- !   integer(hid_t) :: dset1_id,dset2_id
- !   integer     ::   error,iv,ivp,ic,icp,imatrix
- !   integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
- ! 
- !   allocate(data1_dims(7))
- !   data1_dims(1) = 2
- !   data1_dims(2) = sys%nb
- !   data1_dims(3) = sys%nb
- !   data1_dims(4) = sys%nb
- !   data1_dims(5) = sys%nb
- !   data1_dims(6) = 1
- !   data1_dims(7) = 1
- !   imatrix = 3
- !   call h5open_f(error)
- !   call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
- !   if (imatrix== 1) then
- !      call h5dopen_f(file_id, name_1, dset1_id, error)
- !   elseif (imatrix== 2) then
- !      call h5dopen_f(file_id, name_2, dset1_id, error)
- !   elseif (imatrix== 3) then
- !      call h5dopen_f(file_id, name_3, dset1_id, error)
- !   elseif (imatrix== 4) then
- !      call h5dopen_f(file_id, name_4, dset1_id, error)
- !   end if
- !   allocate(data1_out(2,sys%nb,sys%nb,sys%nb,sys%nb,1,1))
- !   print*,sys%nb
- !   call h5dread_f(dset1_id, H5T_NATIVE_DOUBLE, data1_out, data1_dims, error)
- !   call h5dclose_f(dset1_id, error)
- !   do icp=1,sys%nb
- !      do ic=1,sys%nb
- !         do ivp=1,sys%nb
- !             do iv=1,sys%nb
- !                 bsemat(iv,ivp,ic,icp) = data1_out(1,iv,ivp,ic,icp,1,1)
- !                 !print*,bse_mat(iv,ivp,ic,icp),iv,ivp,ic,icp
- !             enddo
- !         enddo
- !      enddo
- !   enddo
- !   !print*,bse_mat(1,1,2,1),imatrix
- !   call h5fclose_f(file_id, error)
- !   call h5close_f(error)
- !   deallocate(data1_out)
- ! 
- ! end subroutine read_bsemat_d
+  subroutine read_bsemat_d(bsemat)
+    complex(kind=8), dimension(sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ),intent(inout) :: bsemat
+    character(len=20) :: filename 
+    character(len=10), parameter :: name_1 = "/mats/head"
+    character(len=10), parameter :: name_2 = "/mats/wing"
+    character(len=10), parameter :: name_3 = "/mats/body"
+    character(len=14), parameter :: name_4 = "/mats/exchange"
+    double precision, DIMENSION(:,:,:,:,:,:,:), allocatable :: data1_out
+    integer :: i,iQ,ik,ikp
+    integer(hid_t) :: file_id
+    integer(hid_t) :: dset1_id,dset2_id
+    integer     ::   error,iv,ivp,ic,icp
+    integer :: imatrix
+    integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+  
+    allocate(data1_dims(7))
+    allocate(data1_out(2,sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk))
+    data1_dims(1) = 2
+    data1_dims(2) = sys%nv
+    data1_dims(3) = sys%nv
+    data1_dims(4) = sys%nc
+    data1_dims(5) = sys%nc
+    data1_dims(6) = sys%nk
+    data1_dims(7) = sys%nk
+    
+    call h5open_f(error)
+    do iQ = 1,sys%nQ
+      write(filename, '("bsemat_", I0, ".h5")') iQ
+      call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
+      do imatrix = 3,3
+        if (imatrix== 1) then
+         call h5dopen_f(file_id, name_1, dset1_id, error)
+        elseif (imatrix== 2) then
+          call h5dopen_f(file_id, name_2, dset1_id, error)
+        elseif (imatrix== 3) then
+         call h5dopen_f(file_id, name_3, dset1_id, error)
+        elseif (imatrix== 4) then
+         call h5dopen_f(file_id, name_4, dset1_id, error)
+        end if
+      
+        call h5dread_f(dset1_id, H5T_NATIVE_DOUBLE, data1_out, data1_dims, error)
+        call h5dclose_f(dset1_id, error)
+        do icp=1,sys%nc
+         do ic=1,sys%nc
+           do ivp=1,sys%nv
+              do iv=1,sys%nv
+                 do ik = 1,sys%nk
+                    do ikp = 1,sys%nk
+                      bsemat(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
+                      !print*,bsemat(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
+                    end do
+                  end do
+            
+              enddo
+          enddo
+       enddo
+      enddo
+    !print*,bse_mat(1,1,2,1),imatrix
+    end do !imatrix loop
+    call h5fclose_f(file_id, error)
+    !)
+    end do !iQ loop
+
+    call h5close_f(error)
+
+    deallocate(data1_out)
+  
+  end subroutine read_bsemat_d
+
+  subroutine read_bsemat_ee(bsemat_ee)
+    complex(kind=8), dimension(sys%nc,sys%nc,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ),intent(inout) :: bsemat_ee
+    character(len=20) :: filename 
+    character(len=13), parameter :: name_1 = "/mats/head_ee"
+    character(len=13), parameter :: name_2 = "/mats/wing_ee"
+    character(len=13), parameter :: name_3 = "/mats/body_ee"
+    character(len=14), parameter :: name_4 = "/mats/exchange"
+    double precision, DIMENSION(:,:,:,:,:,:,:), allocatable :: data1_out
+    integer :: i,iQ,ik,ikp
+    integer :: imatrix
+    integer(hid_t) :: file_id
+    integer(hid_t) :: dset1_id,dset2_id
+    integer     ::   error,iv,ivp,ic,icp
+    integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+  
+    allocate(data1_dims(7))
+    data1_dims(1) = 2
+    data1_dims(2) = sys%nc
+    data1_dims(3) = sys%nc
+    data1_dims(4) = sys%nc
+    data1_dims(5) = sys%nc
+    data1_dims(6) = sys%nk
+    data1_dims(7) = sys%nk
+     allocate(data1_out(2,sys%nc,sys%nc,sys%nc,sys%nc,sys%nk,sys%nk))
+    call h5open_f(error)
+    do iQ = 1,sys%nQ
+      
+        !open hdf5 file name eigenvectors_$i.h5
+    write(filename, '("bsemat_", I0, ".h5")') iQ
+    call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
+    do imatrix = 1,3
+      if (imatrix== 1) then
+       call h5dopen_f(file_id, name_1, dset1_id, error)
+      elseif (imatrix== 2) then
+       call h5dopen_f(file_id, name_2, dset1_id, error)
+      elseif (imatrix== 3) then
+       call h5dopen_f(file_id, name_3, dset1_id, error)
+      elseif (imatrix== 4) then
+       call h5dopen_f(file_id, name_4, dset1_id, error)
+      end if
+     
+  
+      call h5dread_f(dset1_id, H5T_NATIVE_DOUBLE, data1_out, data1_dims, error)
+      call h5dclose_f(dset1_id, error)
+      do icp=1,sys%nc
+       do ic=1,sys%nc
+          do ivp=1,sys%nc
+              do iv=1,sys%nc
+                 do ik = 1,sys%nk
+                    do ikp = 1,sys%nk
+                      bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
+                     ! print*,bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
+                    end do
+                  end do
+            
+              enddo
+          enddo
+       enddo
+    enddo
+    !print*,bse_mat(1,1,2,1),imatrix
+    end do !imatrix loop
+    call h5fclose_f(file_id, error)
+   
+    end do !iQ loop
+    call h5close_f(error)
+    deallocate(data1_out)
+  
+  end subroutine read_bsemat_ee
+
+    subroutine read_bsemat_hh(bsemat_hh)
+    complex(kind=8), dimension(sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk,sys%nQ),intent(inout) :: bsemat_hh
+    character(len=20) :: filename 
+    character(len=13), parameter :: name_1 = "/mats/head_hh"
+    character(len=13), parameter :: name_2 = "/mats/wing_hh"
+    character(len=13), parameter :: name_3 = "/mats/body_hh"
+    character(len=13), parameter :: name_4 = "/mats/exchange"
+    double precision, DIMENSION(:,:,:,:,:,:,:), allocatable :: data1_out
+    integer :: i,iQ,ik,ikp
+    integer :: imatrix
+    integer(hid_t) :: file_id
+    integer(hid_t) :: dset1_id,dset2_id
+    integer     ::   error,iv,ivp,ic,icp
+    integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+    allocate(data1_out(2,sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk))
+    allocate(data1_dims(7))
+    data1_dims(1) = 2
+    data1_dims(2) = sys%nv
+    data1_dims(3) = sys%nv
+    data1_dims(4) = sys%nv
+    data1_dims(5) = sys%nv
+    data1_dims(6) = sys%nk
+    data1_dims(7) = sys%nk
+    
+    call h5open_f(error)
+    do iQ = 1,sys%nQ
+      
+        !open hdf5 file name eigenvectors_$i.h5
+    write(filename, '("bsemat_", I0, ".h5")') iQ
+    call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
+    do imatrix = 1,3
+      if (imatrix== 1) then
+       call h5dopen_f(file_id, name_1, dset1_id, error)
+      elseif (imatrix== 2) then
+       call h5dopen_f(file_id, name_2, dset1_id, error)
+      elseif (imatrix== 3) then
+       call h5dopen_f(file_id, name_3, dset1_id, error)
+      elseif (imatrix== 4) then
+       call h5dopen_f(file_id, name_4, dset1_id, error)
+      end if
+      
+  
+      call h5dread_f(dset1_id, H5T_NATIVE_DOUBLE, data1_out, data1_dims, error)
+      call h5dclose_f(dset1_id, error)
+      do icp=1,sys%nv
+       do ic=1,sys%nv
+          do ivp=1,sys%nv
+              do iv=1,sys%nv
+                 do ik = 1,sys%nk
+                    do ikp = 1,sys%nk
+                      bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
+                      !print*,bsemat(iv,ivp,ic,icp),iv,ivp,ic,icp
+                    end do
+                  end do
+            
+              enddo
+          enddo
+       enddo
+    enddo
+    !print*,bse_mat(1,1,2,1),imatrix
+    end do !imatrix loop
+    call h5fclose_f(file_id, error)
+    !call h5close_f(error)
+    end do !iQ loop
+    call h5close_f(error)
+    deallocate(data1_out)
+  
+  end subroutine read_bsemat_hh
+
+  
+  
+
 !
  ! subroutine read_bsemat_x(bsemat)
  !  double precision, dimension(sys%nb,sys%nb,sys%nb,sys%nb),intent(inout) :: bsemat

@@ -28,8 +28,8 @@ module solve_generalized_eigenvalue_problem
     double precision :: ellow,elup
     complex(kind=8) :: sum,sum2,sum3,sum4
     complex(kind=8) :: A_MN,A_MNe,A_MNh,A_NM,IJ_amp
-    integer :: ik1,ik2,iq
-    double precision :: q(3),mQl(3)
+    integer :: ik1,ik2,iq,ip
+    double precision :: q(3),mQl(3),p(3)
     double precision,allocatable,dimension(:,:) :: cMN,cijab
     double precision,allocatable,dimension(:,:) :: old
     integer,allocatable :: iarray(:),jarray(:),aarray(:),barray(:)
@@ -85,37 +85,52 @@ module solve_generalized_eigenvalue_problem
          end do
       end do
    end do
-   sum = 0.0
+   sum = cmplx(0.0,0.0)
    IJ_amp = 0.0
    A_MN = 0.0
    A_MNe = 0.0
    A_MNh = 0.0
    A_NM = 0.0
-   I = 1 
-   J =4
+   !I = 4 
+   !J =1
    
    ik1 = 1
    ik2 = 2
-   iQ_r = 4
+   !iQ_r = 2
+   do ik1 = 1,sys%nk
+   do ik2 = 1,sys%nk
+   do I = 1,sys%neb 
+      do J = 1,sys%neb
+         do iQ_r = 1,sys%nQ
+         sum = cmplx(0.0,0.0)
 
    
-   do M = 1,sys%neb
-      do N = 1,sys%neb
+      do M = 1,sys%neb
+        do N = 1,sys%neb
          do iQ_l = 1,sys%nQ
+            A_MN = 0.0
+            A_MNe = 0.0
+            A_MNh = 0.0
+            A_NM = 0.0
 
             mQl = -sys%Qpts(:,iQ_l)
             call Qpoint_to_index(mQl,imQ_l)
-            A_MN = (exciton_sys%eigenvectors_t(1,1,1,ik1,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik2,N,imQ_l))
-            if(ik1 == ik2)then
+            if(iQ_l == iQ_r)then
+               A_MN = (exciton_sys%eigenvectors_t(1,1,1,ik1,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik2,N,imQ_l))
+            end if
+            p = sys%kpts(:,ik2) - sys%kpts(:,ik1) + sys%Qpts(:,iQ_r)
+            call kpoint_to_index(p,ip)
+            if(iQ_l == ip)then
                A_MNe = (exciton_sys%eigenvectors_t(1,1,1,ik2,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik1,N,imQ_l))
             end if
-            q = sys%kpts(:,ik1) - sys%kpts(:,ik2) - 2 *sys%Qpts(:,iQ_l)
+            q = sys%kpts(:,ik1) - sys%kpts(:,ik2) - sys%Qpts(:,iQ_r)
             call kpoint_to_index(q,iq)
-            if(iq==1)then
+            if(iQ_l==iq)then
                A_MNh = (exciton_sys%eigenvectors_t(1,1,1,ik1,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik2,N,imQ_l))
             end if
-
-            A_NM =(exciton_sys%eigenvectors_t(1,1,1,ik2,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik1,N,imQ_l))
+            if(imQ_l == iQ_r) then 
+               A_NM =(exciton_sys%eigenvectors_t(1,1,1,ik2,M,iQ_l))*(exciton_sys%eigenvectors_t(1,1,1,ik1,N,imQ_l))
+            end if
             if(I ==M .and.J==N .and. iQ_l == iQ_r)then
                IJ_amp = (A_MN - A_MNe - A_MNh + A_NM)
             end if
@@ -123,12 +138,18 @@ module solve_generalized_eigenvalue_problem
             !- exciton_sys%eigenvectors(1,1,1,ik1,M,iQ_l)*exciton_sys%eigenvectors(1,1,1,ik2,M,imQ_l) &
             !- exciton_sys%eigenvectors(1,1,1,ik1,M,iQ_r)*exciton_sys%eigenvectors(1,1,1,ik2,N,iQ_l) &
             !+ exciton_sys%eigenvectors(1,1,1,ik1,N,iQ_r)*exciton_sys%eigenvectors(1,1,1,ik2,M,iQ_l))
+          
          end do
       end do
    end do      
   
-   print*,"projection on IJ",sum,IJ_amp         
-            
+   print*,"projection on IJ",sum,IJ_amp,abs(sum+IJ_amp)         
+     
+end do
+end do
+end do
+end do
+end do
       
     !ham%A =- ham%B
     z = ham%l

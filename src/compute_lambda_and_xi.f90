@@ -13,9 +13,9 @@ module compute_lambda_and_xi
         integer :: ik
         integer :: imQl,imQr,ikp
         double precision :: mQl(3),mQr(3),kp(3),kp2(3)
-        complex(kind=16),intent(inout) :: lambda1
-        complex(kind=16) :: sum1
-        complex(kind=16) :: AI_ck_vkmQr,AJ_cpkp_vpkppQr,AM_ck_vpkmQl,AN_cpkp_vkppQl
+        complex(kind=8),intent(inout) :: lambda1
+        complex(kind=8) :: sum1
+        complex(kind=8) :: AI_ck_vkmQr,AJ_cpkp_vpkppQr,AM_ck_vpkmQl,AN_cpkp_vkppQl
         ! A_(s,v,c,k,I,Q)
         sum1 = 0
         lambda1 = 0.0
@@ -180,160 +180,539 @@ module compute_lambda_and_xi
    ! 
    ! 
    ! 
-   ! subroutine compute_xi_ee(Iex,Jex,Mex,Nex,bsemat,xi_ee1_tttt,xi_ee2_tttt,xi_ee1_ssss,xi_ee2_ssss,xi_ee1_sstt,xi_ee2_sstt,xi_ee1_ttss,xi_ee2_ttss)
-   !     !\xi_ee(I,J,M,N) = \sum_{i,j,c,c',v,v'}  A_{M}^{i,v}A_{N}^{j,v'}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
-   !     integer,intent(in) :: Iex,Jex,Mex,Nex
-   !     integer :: c,v,cp,vp,i,j
-   !     integer :: nv
-   !     double precision,intent(in),dimension(sys%nb,sys%nb,sys%nb,sys%nb) :: bsemat
-   !     double precision,intent(inout) :: xi_ee1_tttt,xi_ee2_tttt,xi_ee1_ssss,xi_ee2_ssss,xi_ee1_sstt,xi_ee2_sstt,xi_ee1_ttss,xi_ee2_ttss
-   !     double precision :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8,AIT_cv,AIS_cv,AJT_cpvp,AJS_cpvp,AMT_iv,AMS_iv,ANT_jvp,ANS_jvp,AMT_ivp,AMS_ivp,ANT_jv,ANS_jv
-   !     nv = sys%nv
-   !     AIT_cv = 0.0
-   !     AIS_cv = 0.0
-   !     AJT_cpvp = 0.0
-   !     AJS_cpvp = 0.0
-   !     AMT_iv = 0.0
-   !     AMS_iv = 0.0
-   !     ANT_jvp = 0.0
-   !     ANS_jvp = 0.0
-   !     AMT_ivp = 0.0
-   !     AMS_ivp = 0.0
-   !     ANT_jv = 0.0
-   !     ANS_jv = 0.0
-   !     sum1 = 0.0
-   !     sum2 = 0.0
-   !     sum3 = 0.0
-   !     sum4 = 0.0
-   !     sum5 = 0.0
-   !     sum6 = 0.0
-   !     sum7 = 0.0
-   !     sum8 = 0.0
-   !     do i = 1,sys%nc
-   !         do j = 1,sys%nc
-   !             do c = 1,sys%nc
-   !                 do cp = 1,sys%nc
-   !                     do v = 1,sys%nv
-   !                         do vp = 1,sys%nv
-   !                             !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
-   !                             !bsemat()   = <ij|W|ccp>
-   !                             AIT_cv= exciton_sys%eigenvectors_t(Iex,v,c)
-   !                             AIS_cv= exciton_sys%eigenvectors_s(Iex,v,c)
-   !                             AJT_cpvp = exciton_sys%eigenvectors_t(Jex,vp,cp)
-   !                             AJS_cpvp = exciton_sys%eigenvectors_s(Jex,vp,cp)
-   !                             AMT_iv = exciton_sys%eigenvectors_t(Mex,v,i)
-   !                             AMS_iv = exciton_sys%eigenvectors_s(Mex,v,i)
-   !                             ANT_jvp = exciton_sys%eigenvectors_t(Nex,vp,j)
-   !                             ANS_jvp = exciton_sys%eigenvectors_s(Nex,vp,j)
-   !                             AMT_ivp = exciton_sys%eigenvectors_t(Mex,vp,i)
-   !                             AMS_ivp = exciton_sys%eigenvectors_s(Mex,vp,i)
-   !                             ANT_jv = exciton_sys%eigenvectors_t(Nex,v,j)
-   !                             ANS_jv = exciton_sys%eigenvectors_s(Nex,v,j)
-   !                             sum1 = sum1 + AMT_iv*ANT_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
-   !                             sum2 = sum2 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
-   !                             sum3 = sum3 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
-   !                             sum4 = sum4 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
-   !                             sum5 = sum5 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
-   !                             sum6 = sum6 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
-   !                             sum7 = sum7 + AMT_iv*ANT_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
-   !                             sum8 = sum8 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
-   !                            
-   !                         end do
-   !                     end do
-   !                 end do
-   !             end do
-   !         end do
-   !     end do
-   !     xi_ee1_tttt = sum1
-   !     xi_ee2_tttt = sum2
-   !     xi_ee1_ssss = sum3
-   !     xi_ee2_ssss = sum4
-   !     xi_ee1_sstt = sum5
-   !     xi_ee2_sstt = sum6
-   !     xi_ee1_ttss = sum7
-   !     xi_ee2_ttss = sum8
-   !     !xi_ee2 = sum2
-   !     
-   ! end subroutine compute_xi_ee
+    subroutine compute_xi_ee1(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_ee,xi_ee1_tttt,xi_ee1_ssss,xi_ee1_sstt,xi_ee1_ttss)
+        !\xi_ee(I,J,M,N) = \sum_{i,j,c,c',v,v'}  A_{M}^{i,v}A_{N}^{j,v'}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
+               !\xi_ee(I,J,M,N) = \sum_{i,j,c,c',v,v'}  A_{M}^{i,v}A_{N}^{j,v'}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
+        integer,intent(in) :: Iex,Jex,Mex,Nex
+        integer,intent(in) :: iQ_r,iQ_l
+        integer :: c,v,cp,vp,i,j
+        integer :: nv
+        integer :: ik,ikp,ik_i,ik_j,ip,ipp,iQ,imQl,imQr
+        double precision :: mQl(3),mQr(3),k_i(3),k_j(3),p(3),pp(3),Q(3)
+        complex(kind=8),intent(in),dimension(sys%nc,sys%nc,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ) :: bsemat_ee
+        complex(kind=8),intent(inout) :: xi_ee1_tttt,xi_ee1_ssss,xi_ee1_sstt,xi_ee1_ttss
+        complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+        complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_iv_kQlmQr_Ql,ANT_jvp_kpQrmQl_mQl
+
+        mQl = -sys%Qpts(:,iQ_l) 
+        call Qpoint_to_index(mQl,imQl)
+        mQr = -sys%Qpts(:,iQ_r)
+        call Qpoint_to_index(mQr,imQr)
+       ! nv = sys%nv
+        AIT_cv_k_Qr = (0.0,0.0)
+        !AIS_cv = 0.0
+        AJT_cpvp_kp_mQr = (0.0,0.0)
+        !AJS_cpvp = 0.0
+        AMT_iv_kQlmQr_Ql = (0.0,0.0)
+        !AMS_iv = 0.0
+        ANT_jvp_kpQrmQl_mQl = (0.0,0.0)
+        !ANS_jvp = 0.0
+        !AMT_ivp = 0.0
+        !AMS_ivp = 0.0
+        !ANT_jv = 0.0
+        !ANS_jv = 0.0
+        sum1 = 0.0
+        sum2 = 0.0
+        sum3 = 0.0
+        sum4 = 0.0
+        sum5 = 0.0
+        sum6 = 0.0
+        sum7 = 0.0
+        sum8 = 0.0
+        do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            k_i = sys%kpts(:,ik) - sys%Qpts(:,iQ_r) + sys%Qpts(:,iQ_l)
+            k_j = sys%kpts(:,ikp) + sys%Qpts(:,iQ_r) - sys%Qpts(:,iQ_l)
+            p = k_i
+            Q =  sys%kpts(:,ik) - sys%kpts(:,ikp) - sys%Qpts(:,iQ_r) + sys%Qpts(:,iQ_l)
+             
+            call kpoint_to_index(k_i,ik_i)
+            call kpoint_to_index(k_j,ik_j)
+            call Qpoint_to_index(Q,iQ)
+            ip = ik_i
+            ipp = ik 
+           do i = 1,sys%nc
+            do j = 1,sys%nc
+                do c = 1,sys%nc
+                    do cp = 1,sys%nc
+                        do v = 1,sys%nv
+                            do vp = 1,sys%nv
+                                !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
+                                !bsemat()   = <ij|W|ccp>
+
+                                 AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                 AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_iv_kQlmQr_Ql = exciton_sys%eigenvectors_t(1,v,i,ik_i,Mex,iQ_l)
+                                 ANT_jvp_kpQrmQl_mQl = exciton_sys%eigenvectors_t(1,vp,j,ik_j,Nex,imQl)
+                                !AIT_cv= exciton_sys%eigenvectors_t(Iex,v,c)
+                               ! AIS_cv= exciton_sys%eigenvectors_s(Iex,v,c)
+                                !AJT_cpvp = exciton_sys%eigenvectors_t(Jex,vp,cp)
+                                !AJS_cpvp = exciton_sys%eigenvectors_s(Jex,vp,cp)
+                              !  AMT_iv = exciton_sys%eigenvectors_t(Mex,v,i)
+                                !AMS_iv = exciton_sys%eigenvectors_s(Mex,v,i)
+                               ! ANT_jvp = exciton_sys%eigenvectors_t(Nex,vp,j)
+                                !ANS_jvp = exciton_sys%eigenvectors_s(Nex,vp,j)
+                                !AMT_ivp = exciton_sys%eigenvectors_t(Mex,vp,i)
+                                !AMS_ivp = exciton_sys%eigenvectors_s(Mex,vp,i)
+                                !ANT_jv = exciton_sys%eigenvectors_t(Nex,v,j)
+                                !ANS_jv = exciton_sys%eigenvectors_s(Nex,v,j)
+                                sum1 = sum1 + conjg(AMT_iv_kQlmQr_Ql)*conjg(ANT_jvp_kpQrmQl_mQl)*bsemat_ee(cp,j,i,c,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                                !sum2 = sum2 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum3 = sum3 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum4 = sum4 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum5 = sum5 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum6 = sum6 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum7 = sum7 + AMT_iv*ANT_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum8 = sum8 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                               
+                            end do
+                        end do
+                    end do
+                end do
+            end do
+        end do
+        end do
+      end do
+        !xi_ee1_tttt = sum1
+        xi_ee1_tttt = sum1
+        !xi_ee1_ssss = sum3
+        xi_ee1_ssss = sum3
+        !xi_ee1_sstt = sum5
+        xi_ee1_sstt = sum5
+        !xi_ee1_ttss = sum7
+        xi_ee1_ttss = sum7
+        !xi_ee2 = sum2
+        
+    end subroutine compute_xi_ee1
+
+    subroutine compute_xi_ee2(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_ee,xi_ee2_tttt,xi_ee2_ssss,xi_ee2_sstt,xi_ee2_ttss)
+      integer,intent(in) :: Iex,Jex,Mex,Nex
+        integer,intent(in) :: iQ_r,iQ_l
+        integer :: c,v,cp,vp,i,j
+        integer :: nv
+        integer :: ik,ikp,ik_i,ik_j,ip,ipp,iQ,imQl,imQr
+        double precision :: mQl(3),mQr(3),k_i(3),k_j(3),p(3),pp(3),Q(3)
+        complex(kind=8),intent(in),dimension(sys%nc,sys%nc,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ) :: bsemat_ee
+        complex(kind=8),intent(inout) :: xi_ee2_tttt,xi_ee2_ssss,xi_ee2_sstt,xi_ee2_ttss
+        complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+        complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_ivp_kpQlQr_Ql,ANT_jv_kmQrmQl_mQl
+
+        mQl = -sys%Qpts(:,iQ_l) 
+        call Qpoint_to_index(mQl,imQl)
+        mQr = -sys%Qpts(:,iQ_r)
+        call Qpoint_to_index(mQr,imQr)
+       ! nv = sys%nv
+        AIT_cv_k_Qr = (0.0,0.0)
+        !AIS_cv = 0.0
+        AJT_cpvp_kp_mQr = (0.0,0.0)
+        !AJS_cpvp = 0.0
+        AMT_ivp_kpQlQr_Ql = (0.0,0.0)
+        !AMS_iv = 0.0
+        ANT_jv_kmQrmQl_mQl = (0.0,0.0)
+        !ANS_jvp = 0.0
+        !AMT_ivp = 0.0
+        !AMS_ivp = 0.0
+        !ANT_jv = 0.0
+        !ANS_jv = 0.0
+        sum1 = 0.0
+        sum2 = 0.0
+        sum3 = 0.0
+        sum4 = 0.0
+        sum5 = 0.0
+        sum6 = 0.0
+        sum7 = 0.0
+        sum8 = 0.0
+        do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            k_i = sys%kpts(:,ikp) + sys%Qpts(:,iQ_r) + sys%Qpts(:,iQ_l)
+            k_j = sys%kpts(:,ik) - sys%Qpts(:,iQ_r) - sys%Qpts(:,iQ_l)
+            p = k_i
+            Q =  sys%Qpts(:,iQ_r) + sys%Qpts(:,iQ_l)
+             
+            call kpoint_to_index(k_i,ik_i)
+            call kpoint_to_index(k_j,ik_j)
+            call Qpoint_to_index(Q,iQ)
+            ip = ik_i
+            ipp = ik 
+           do i = 1,sys%nc
+            do j = 1,sys%nc
+                do c = 1,sys%nc
+                    do cp = 1,sys%nc
+                        do v = 1,sys%nv
+                            do vp = 1,sys%nv
+                                !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
+                                !bsemat()   = <ij|W|ccp>
+
+                                 AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                 AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_ivp_kpQlQr_Ql = exciton_sys%eigenvectors_t(1,vp,i,ik_i,Mex,iQ_l)
+                                 ANT_jv_kmQrmQl_mQl = exciton_sys%eigenvectors_t(1,v,j,ik_j,Nex,imQl)
+
+                                ! if(Iex==2 .and. Jex==1 .and. Mex==1 .and. Nex==2 .and. iQ_r==1 .and. iQ_l==1) then
+                                !    !print*, "Iex,Jex,Mex,Nex", Iex,Jex,Mex,Nex
+                                !    print*, "ik,ikp", ik,ikp
+                                !    !print*, "imQl,imQr", imQl,imQr
+                                !    print*, "AIT_cv_k_Qr", AIT_cv_k_Qr
+                                !    print*, "AJT_cpvp_kp_mQr", AJT_cpvp_kp_mQr
+                                !    print*, "AMT_ivp_kpQlQr_Ql", AMT_ivp_kpQlQr_Ql
+                                !    print*, "ANT_jv_kmQrmQl_mQl", ANT_jv_kmQrmQl_mQl
+                                !    print*,"ip,ipp,iQ",ip,ipp,iQ
+                                !    print*, "bsemat_ee(cp,j,i,c,ip,ipp,iQ)", bsemat_ee(cp,j,i,c,ip,ipp,iQ)
+                                !    print*,"final",conjg(AMT_ivp_kpQlQr_Ql)*conjg(ANT_jv_kmQrmQl_mQl)*bsemat_ee(cp,j,i,c,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                                ! end if
+                                !AIT_cv= exciton_sys%eigenvectors_t(Iex,v,c)
+                               ! AIS_cv= exciton_sys%eigenvectors_s(Iex,v,c)
+                                !AJT_cpvp = exciton_sys%eigenvectors_t(Jex,vp,cp)
+                                !AJS_cpvp = exciton_sys%eigenvectors_s(Jex,vp,cp)
+                              !  AMT_iv = exciton_sys%eigenvectors_t(Mex,v,i)
+                                !AMS_iv = exciton_sys%eigenvectors_s(Mex,v,i)
+                               ! ANT_jvp = exciton_sys%eigenvectors_t(Nex,vp,j)
+                                !ANS_jvp = exciton_sys%eigenvectors_s(Nex,vp,j)
+                                !AMT_ivp = exciton_sys%eigenvectors_t(Mex,vp,i)
+                                !AMS_ivp = exciton_sys%eigenvectors_s(Mex,vp,i)
+                                !ANT_jv = exciton_sys%eigenvectors_t(Nex,v,j)
+                                !ANS_jv = exciton_sys%eigenvectors_s(Nex,v,j)
+                                sum2 = sum2 + conjg(AMT_ivp_kpQlQr_Ql)*conjg(ANT_jv_kmQrmQl_mQl)*bsemat_ee(cp,j,i,c,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                                !sum2 = sum2 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum3 = sum3 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum4 = sum4 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum5 = sum5 + AMS_iv*ANS_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum6 = sum6 + AMS_ivp*ANS_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIT_cv*AJT_cpvp
+                                !sum7 = sum7 + AMT_iv*ANT_jvp*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                                !sum8 = sum8 + AMT_ivp*ANT_jv*bsemat(cp+nv,j+nv,i+nv,c+nv)*AIS_cv*AJS_cpvp
+                               
+                            end do
+                        end do
+                    end do
+                end do
+            end do
+        end do
+        end do
+      end do
+        xi_ee2_tttt = sum2
+        !xi_ee2_tttt = sum2
+        xi_ee2_ssss = sum4
+        !xi_ee2_ssss = sum4
+        xi_ee2_sstt = sum6
+        !xi_ee2_sstt = sum6
+        xi_ee2_ttss = sum8
+        !xi_ee2_ttss = sum8
+        !xi_ee2 = sum2
+        
+
+        
+    end subroutine compute_xi_ee2
    ! 
    ! 
-   ! subroutine compute_xi_hh(Iex,Jex,Mex,Nex,bsemat,xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_sstt,xi_hh2_sstt,xi_hh1_ttss,xi_hh2_ttss)
-   !     !\xi_hh(I,J,M,N) = \sum_{\alpha,\beta,c,c',v,v'}  A_{M}^{c,alpha}A_{N}^{c',beta}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
-   !     ! bsemat(eta,beta,alpha,gama)) = <alpha,beta|W|gama,eta>
-   !     ! bsemat(beta,vp,v,alpha)) = <vvp|W|alpha,beta>
-   !     
-   !     integer,intent(in) :: Iex,Jex,Mex,Nex
-   !     integer :: c,v,cp,vp,alpha,beta
-   !     double precision ,intent(in),dimension(sys%nb,sys%nb,sys%nb,sys%nb) :: bsemat
-   !     double precision,intent(inout) :: xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_sstt,xi_hh2_sstt,xi_hh1_ttss,xi_hh2_ttss
-   !     double precision :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8,AIT_cv,AIS_cv,AJT_cpvp,AJS_cpvp,AMT_calpha,AMS_calpha,ANT_cpbeta,ANS_cpbeta,AMT_cbeta,AMS_cbeta,ANT_cpalpha,ANS_cpalpha
-   !     sum1 = 0
-   !     sum2 = 0
-   !     sum3 = 0
-   !     sum4 = 0
-   !     sum5 = 0
-   !     sum6 = 0
-   !     sum7 = 0
-   !     sum8 = 0
-   !     xi_hh1_tttt=0.0
-   !     xi_hh2_tttt=0.0
-   !     xi_hh1_ssss=0.0
-   !     xi_hh2_ssss=0.0
-   !     xi_hh1_sstt=0.0
-   !     xi_hh2_sstt=0.0
-   !     xi_hh1_ttss=0.0
-   !     xi_hh2_ttss=0.0
-   !     do alpha = 1,sys%nv
-   !         do beta = 1,sys%nv
-   !             do c = 1,sys%nc
-   !                 do cp = 1,sys%nc
-   !                     do v = 1,sys%nv
-   !                         do vp = 1,sys%nv
-   !                             !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
-   !                             !bsemat()   = <ij|W|ccp>
-   !                             AIT_cv= exciton_sys%eigenvectors_t(Iex,v,c)
-   !                             AIS_cv= exciton_sys%eigenvectors_s(Iex,v,c)
-   !                             AJT_cpvp = exciton_sys%eigenvectors_t(Jex,vp,cp)
-   !                             AJS_cpvp = exciton_sys%eigenvectors_s(Jex,vp,cp)
-   !                             AMT_calpha = exciton_sys%eigenvectors_t(Mex,alpha,c)
-   !                             AMS_calpha = exciton_sys%eigenvectors_s(Mex,alpha,c)
-   !                             ANT_cpbeta = exciton_sys%eigenvectors_t(Nex,beta,cp)
-   !                             ANS_cpbeta = exciton_sys%eigenvectors_s(Nex,beta,cp)
-   !                             AMT_cbeta = exciton_sys%eigenvectors_t(Mex,beta,c)
-   !                             AMS_cbeta = exciton_sys%eigenvectors_s(Mex,beta,c)
-   !                             ANT_cpalpha = exciton_sys%eigenvectors_t(Nex,alpha,cp)
-   !                             ANS_cpalpha = exciton_sys%eigenvectors_s(Nex,alpha,cp) 
-   !                             sum1 = sum1 + AMT_calpha*ANT_cpbeta*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
-   !                             sum2 = sum2 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
-   !                             sum3 = sum3 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
-   !                             sum4 = sum4 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
-   !                             sum5 = sum5 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
-   !                             sum6 = sum6 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
-   !                             sum7 = sum7 + AMT_calpha*ANT_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
-   !                             sum8 = sum8 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp                            
-   !                             
-   !                         end do
-   !                     end do
-   !                 end do
-   !             end do
-   !         end do
-   !     end do
-   !     xi_hh1_tttt = sum1
-   !     xi_hh2_tttt = sum2
-   !     xi_hh1_ssss = sum3
-   !     xi_hh2_ssss = sum4
-   !     xi_hh1_sstt = sum5
-   !     xi_hh2_sstt = sum6
-   !     xi_hh1_ttss = sum7
-   !     xi_hh2_ttss = sum8
-   !     
-   ! end subroutine compute_xi_hh
-   ! 
-   ! subroutine compute_xi_in_ehd(Iex,Jex,Mex,Nex,bsemat,xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss)
-   !     !\xi_in_ehd(I,J,M,N) = \sum_{i,\alpha,c,c',v,v'}  A_{M}^{i,v}A_{N}^{c,alpha}bsemat(alpha,v',i+nv,c+nv)A_{I)^{c,v}A_{J}^{c'v'}
-   !     !\xi_out_ehd(I,J,M,N) = \sum_{i,\alpha,c,c',v,v'}  A_{M}^{c,alpha}A_{N}^{i,v'}bsemat(alpha,v,i+nv,c'+nv)A_{I)^{c,v}A_{J}^{c'v'}
-   !     !bsemat(alpha,v',i+nv,c+nv) = <iv'|W|c,alpha>
-   !     !bsemat(alpha,v,i+nv,c'+nv)= <iv|W|c',alpha>
+    subroutine compute_xi_hh1(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_hh,xi_hh1_tttt,xi_hh1_ssss,xi_hh1_sstt,xi_hh1_ttss)
+        !\xi_hh(I,J,M,N) = \sum_{\alpha,\beta,c,c',v,v'}  A_{M}^{c,alpha}A_{N}^{c',beta}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
+        ! bsemat(eta,beta,alpha,gama)) = <alpha,beta|W|gama,eta>
+        ! bsemat(beta,vp,v,alpha)) = <vvp|W|alpha,beta>
+        
+        integer,intent(in) :: Iex,Jex,Mex,Nex
+        integer,intent(in) :: iQ_r,iQ_l
+        integer :: c,v,cp,vp,alpha,beta
+        integer :: ik,ikp
+        double precision :: mQl(3),mQr(3),p(3),pp(3),Q(3)
+        integer :: imQl,imQr,ip,ipp,iQ
+        complex(kind=8) ,intent(in),dimension(sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk,sys%nQ) :: bsemat_hh
+        complex(kind=8),intent(inout) :: xi_hh1_tttt,xi_hh1_ssss,xi_hh1_sstt,xi_hh1_ttss
+        complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+        complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_calpha_k_Ql,ANT_cpbeta_kp_mQl
+
+         mQl = -sys%Qpts(:,iQ_l) 
+        call Qpoint_to_index(mQl,imQl)
+        mQr = -sys%Qpts(:,iQ_r)
+        call Qpoint_to_index(mQr,imQr)
+        sum1 = (0.0,0.0)
+        sum2 = (0.0,0.0)
+        sum3 = (0.0,0.0)
+        sum4 = (0.0,0.0)
+        sum5 = (0.0,0.0)
+        sum6 = (0.0,0.0)
+        sum7 = (0.0,0.0)    
+        sum8 = (0.0,0.0)  
+        xi_hh1_tttt= (0.0,0.0)
+        !xi_hh2_tttt=0.0
+        xi_hh1_ssss= (0.0,0.0)
+        !xi_hh2_ssss=0.0
+        xi_hh1_sstt= (0.0,0.0)
+        !xi_hh2_sstt=0.0
+        xi_hh1_ttss= (0.0,0.0)
+        !xi_hh2_ttss=0.0
+        do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            p = sys%kpts(:,ik) - sys%Qpts(:,iQ_r)
+            pp = sys%kpts(:,ik) -sys%Qpts(:,iQ_l)
+            call kpoint_to_index(p,ip)
+            call kpoint_to_index(pp,ipp)
+            Q = sys%kpts(:,ik) - sys%kpts(:,ikp) - sys%Qpts(:,iQ_r) - sys%Qpts(:,iQ_l)
+            call Qpoint_to_index(Q,iQ)
+           do alpha = 1,sys%nv
+            do beta = 1,sys%nv
+                do c = 1,sys%nc
+                    do cp = 1,sys%nc
+                        do v = 1,sys%nv
+                            do vp = 1,sys%nv
+                                !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
+                                !bsemat()   = <ij|W|ccp>
+
+                                AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_calpha_k_Ql = exciton_sys%eigenvectors_t(1,c,alpha,ik,Mex,iQ_l)
+                                 ANT_cpbeta_kp_mQl = exciton_sys%eigenvectors_t(1,beta,cp,ikp,Nex,imQl)
+                               
+                                sum1 = sum1 + conjg(AMT_calpha_k_Ql)*conjg(ANT_cpbeta_kp_mQl)*bsemat_hh(beta,vp,v,alpha,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                                !sum2 = sum2 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum3 = sum3 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum4 = sum4 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum5 = sum5 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum6 = sum6 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum7 = sum7 + AMT_calpha*ANT_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum8 = sum8 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp                            
+                                
+                            end do
+                        end do
+                    end do
+                end do
+            end do
+          end do
+          end do
+        end do
+        xi_hh1_tttt = sum1
+        !xi_hh2_tttt = sum2
+        xi_hh1_ssss = sum3
+        !xi_hh2_ssss = sum4
+        xi_hh1_sstt = sum5
+        !xi_hh2_sstt = sum6
+        xi_hh1_ttss = sum7
+       !xi_hh2_ttss = sum8
+        
+    end subroutine compute_xi_hh1
+
+    subroutine compute_xi_hh2(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_hh,xi_hh2_tttt,xi_hh2_ssss,xi_hh2_sstt,xi_hh2_ttss)
+        !\xi_hh(I,J,M,N) = \sum_{\alpha,\beta,c,c',v,v'}  A_{M}^{c,alpha}A_{N}^{c',beta}bsemat(cp,j,i,c)A_{I)^{c,v}A_{J}^{c'v'}
+        ! bsemat(eta,beta,alpha,gama)) = <alpha,beta|W|gama,eta>
+        ! bsemat(beta,vp,v,alpha)) = <vvp|W|alpha,beta>
+        
+        integer,intent(in) :: Iex,Jex,Mex,Nex
+        integer,intent(in) :: iQ_r,iQ_l
+        integer :: c,v,cp,vp,alpha,beta
+        integer :: ik,ikp
+        double precision :: mQl(3),mQr(3),p(3),pp(3),Q(3)
+        integer :: imQl,imQr,ip,ipp,iQ
+        complex(kind=8) ,intent(in),dimension(sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk,sys%nQ) :: bsemat_hh
+        complex(kind=8),intent(inout) :: xi_hh2_tttt,xi_hh2_ssss,xi_hh2_sstt,xi_hh2_ttss
+        complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+        complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_cbeta_k_Ql,ANT_cpalpha_kp_mQl
+
+         mQl = -sys%Qpts(:,iQ_l) 
+        call Qpoint_to_index(mQl,imQl)
+        mQr = -sys%Qpts(:,iQ_r)
+        call Qpoint_to_index(mQr,imQr)
+        sum1 = (0.0,0.0)
+        sum2 = (0.0,0.0)
+        sum3 = (0.0,0.0)
+        sum4 = (0.0,0.0)
+        sum5 = (0.0,0.0)
+        sum6 = (0.0,0.0)
+        sum7 = (0.0,0.0)    
+        sum8 = (0.0,0.0)  
+        xi_hh2_tttt= (0.0,0.0)
+        !xi_hh2_tttt=0.0
+        xi_hh2_ssss= (0.0,0.0)
+        !xi_hh2_ssss=0.0
+        xi_hh2_sstt= (0.0,0.0)
+        !xi_hh2_sstt=0.0
+        xi_hh2_ttss= (0.0,0.0)
+        !xi_hh2_ttss=0.0
+        do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            p = sys%kpts(:,ik) - sys%Qpts(:,iQ_r)
+            pp = sys%kpts(:,ikp) +sys%Qpts(:,iQ_l)
+            call kpoint_to_index(p,ip)
+            call kpoint_to_index(pp,ipp)
+            Q =  sys%Qpts(:,iQ_l) - sys%Qpts(:,iQ_r)
+            call Qpoint_to_index(Q,iQ)
+           do alpha = 1,sys%nv
+            do beta = 1,sys%nv
+                do c = 1,sys%nc
+                    do cp = 1,sys%nc
+                        do v = 1,sys%nv
+                            do vp = 1,sys%nv
+                                !bsemat(n+nv,j+nv,i+nv,m+nv) = <ij|W|mn>
+                                !bsemat()   = <ij|W|ccp>
+
+                                AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_cbeta_k_Ql = exciton_sys%eigenvectors_t(1,c,beta,ik,Mex,iQ_l)
+                                 ANT_cpalpha_kp_mQl = exciton_sys%eigenvectors_t(1,alpha,cp,ikp,Nex,imQl)
+
+                                sum2 = sum2 + conjg(AMT_cbeta_k_Ql)*conjg(ANT_cpalpha_kp_mQl)*bsemat_hh(beta,vp,v,alpha,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                                !sum2 = sum2 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum3 = sum3 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum4 = sum4 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum5 = sum5 + AMS_calpha*ANS_cpbeta*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum6 = sum6 + AMS_cbeta*ANS_cpalpha*bsemat(beta,vp,v,alpha)*AIT_cv*AJT_cpvp
+                                !sum7 = sum7 + AMT_calpha*ANT_cpbeta*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp
+                                !sum8 = sum8 + AMT_cbeta*ANT_cpalpha*bsemat(beta,vp,v,alpha)*AIS_cv*AJS_cpvp                            
+                                
+                            end do
+                        end do
+                    end do
+                end do
+            end do
+          end do
+          end do
+        end do
+        !xi_hh1_tttt = sum1
+        xi_hh2_tttt = sum2
+        !xi_hh1_ssss = sum3
+        xi_hh2_ssss = sum4
+        !xi_hh1_sstt = sum5
+        xi_hh2_sstt = sum6
+        !xi_hh1_ttss = sum7
+       xi_hh2_ttss = sum8
+        
+    end subroutine compute_xi_hh2
+    
+    subroutine compute_xi_in_ehd1(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd1_ssss,xi_in_ehd1_sstt,xi_in_ehd1_ttss)
+      integer,intent(in) :: Iex,Jex,Mex,Nex
+      integer,intent(in) :: iQ_r,iQ_l
+      integer :: c,v,cp,vp,i,alpha
+      integer :: ik,ikp,ik_i,ip,ipp,iQ,imQl,imQr
+      double precision :: mQl(3),mQr(3),k_i(3),p(3),pp(3),Q(3)
+      complex(kind=8) ,intent(in),dimension(sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ) :: bsemat_d
+      complex(kind=8),intent(inout) :: xi_in_ehd1_tttt,xi_in_ehd1_ssss,xi_in_ehd1_sstt,xi_in_ehd1_ttss
+      complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+      complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_iv_kmQrQl_Ql,ANT_cpalpha_kp_mQl
+
+      mQl = -sys%Qpts(:,iQ_l) 
+      call Qpoint_to_index(mQl,imQl)
+      mQr = -sys%Qpts(:,iQ_r)
+      call Qpoint_to_index(mQr,imQr)
+      sum1 = (0.0,0.0)
+      sum2 = (0.0,0.0)
+      sum3 = (0.0,0.0)
+      sum4 = (0.0,0.0)
+      sum5 = (0.0,0.0)
+      sum6 = (0.0,0.0)
+      sum7 = (0.0,0.0)    
+      sum8 = (0.0,0.0)
+      xi_in_ehd1_tttt= 0.0
+      xi_in_ehd1_ssss= 0.0
+      xi_in_ehd1_sstt= 0.0
+      xi_in_ehd1_ttss= 0.0
+      do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            k_i = sys%kpts(:,ik) - sys%Qpts(:,iQ_r) + sys%Qpts(:,iQ_l)
+            call kpoint_to_index(k_i,ik_i)
+            p = k_i
+            ip = ik_i
+            ipp = ik
+            Q =  sys%kpts(:,ik) -sys%kpts(:,ikp) -sys%Qpts(:,iQ_r)
+            call Qpoint_to_index(Q,iQ)  
+            do i = 1,sys%nc  
+             do alpha = 1,sys%nv
+                 do c = 1,sys%nc
+                     do cp = 1,sys%nc
+                         do v = 1,sys%nv
+                             do vp = 1,sys%nv
+                                 AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                 AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_iv_kmQrQl_Ql = exciton_sys%eigenvectors_t(1,v,i,ik_i,Mex,iQ_l)
+                                 ANT_cpalpha_kp_mQl = exciton_sys%eigenvectors_t(1,alpha,cp,ikp,Nex,imQl)
+                                 sum1 = sum1 + conjg(AMT_iv_kmQrQl_Ql)*conjg(ANT_cpalpha_kp_mQl)*bsemat_d(alpha,vp,i,c,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                               
+                             end do
+                         end do
+                     end do
+                 end do
+               end do
+            end do
+          end do
+         end do
+         xi_in_ehd1_tttt = sum1
+
+
+     
+
+       
+
+    end subroutine compute_xi_in_ehd1
+
+     subroutine compute_xi_out_ehd1(Iex,Jex,Mex,Nex,iQ_r,iQ_l,bsemat_d,xi_out_ehd1_tttt,xi_out_ehd1_ssss,xi_out_ehd1_sstt,xi_out_ehd1_ttss)
+      integer,intent(in) :: Iex,Jex,Mex,Nex
+      integer,intent(in) :: iQ_r,iQ_l
+      integer :: c,v,cp,vp,i,alpha
+      integer :: ik,ikp,ik_i,ip,ipp,iQ,imQl,imQr
+      double precision :: mQl(3),mQr(3),k_i(3),p(3),pp(3),Q(3)
+      complex(kind=8) ,intent(in),dimension(sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk,sys%nQ) :: bsemat_d
+      complex(kind=8),intent(inout) :: xi_out_ehd1_tttt,xi_out_ehd1_ssss,xi_out_ehd1_sstt,xi_out_ehd1_ttss
+      complex(kind=8) :: sum1,sum2,sum3,sum4,sum5,sum6,sum7,sum8
+      complex(kind=8) :: AIT_cv_k_Qr,AJT_cpvp_kp_mQr,AMT_calpha_k_Ql,ANT_ivp_kpQrmQl_mQl
+
+      mQl = -sys%Qpts(:,iQ_l) 
+      call Qpoint_to_index(mQl,imQl)
+      mQr = -sys%Qpts(:,iQ_r)
+      call Qpoint_to_index(mQr,imQr)
+      sum1 = (0.0,0.0)
+      sum2 = (0.0,0.0)
+      sum3 = (0.0,0.0)
+      sum4 = (0.0,0.0)
+      sum5 = (0.0,0.0)
+      sum6 = (0.0,0.0)
+      sum7 = (0.0,0.0)    
+      sum8 = (0.0,0.0)
+      xi_out_ehd1_tttt= 0.0
+      xi_out_ehd1_ssss= 0.0   
+      xi_out_ehd1_sstt= 0.0
+      xi_out_ehd1_ttss= 0.0
+      do ik = 1,sys%nk
+         do ikp = 1,sys%nk
+            k_i = sys%kpts(:,ikp) + sys%Qpts(:,iQ_r) - sys%Qpts(:,iQ_l)
+            call kpoint_to_index(k_i,ik_i)
+            p = k_i
+            ip = ik_i
+            ipp = ikp
+            Q = sys%kpts(:,ikp) -sys%kpts(:,ik) + sys%Qpts(:,iQ_r) 
+            call Qpoint_to_index(Q,iQ)
+            do i = 1,sys%nc  
+             do alpha = 1,sys%nv
+                 do c = 1,sys%nc
+                     do cp = 1,sys%nc
+                         do v = 1,sys%nv
+                             do vp = 1,sys%nv
+                                 AIT_cv_k_Qr = exciton_sys%eigenvectors_t(1,v,c,ik,Iex,iQ_r)
+                                 AJT_cpvp_kp_mQr = exciton_sys%eigenvectors_t(1,vp,cp,ikp,Jex,imQr)
+                                 AMT_calpha_k_Ql = exciton_sys%eigenvectors_t(1,alpha,c,ik,Mex,iQ_l)
+                                 ANT_ivp_kpQrmQl_mQl = exciton_sys%eigenvectors_t(1,vp,i,ik_i,Nex,imQl)
+                                 sum1 = sum1 + conjg(AMT_calpha_k_Ql)*conjg(ANT_ivp_kpQrmQl_mQl)*bsemat_d(alpha,v,i,cp,ip,ipp,iQ)*AIT_cv_k_Qr*AJT_cpvp_kp_mQr
+                               
+                             end do
+                         end do
+                     end do
+                 end do
+               end do
+            end do
+          end do
+         end do
+         xi_out_ehd1_tttt = sum1
+
+
+     
+
+       
+
+    end subroutine compute_xi_in_ehd2
+
+
+
+    !subroutine compute_xi_in_ehd(Iex,Jex,Mex,Nex,bsemat,xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss)
+        !\xi_in_ehd(I,J,M,N) = \sum_{i,\alpha,c,c',v,v'}  A_{M}^{i,v}A_{N}^{c,alpha}bsemat(alpha,v',i+nv,c+nv)A_{I)^{c,v}A_{J}^{c'v'}
+        !\xi_out_ehd(I,J,M,N) = \sum_{i,\alpha,c,c',v,v'}  A_{M}^{c,alpha}A_{N}^{i,v'}bsemat(alpha,v,i+nv,c'+nv)A_{I)^{c,v}A_{J}^{c'v'}
+        !bsemat(alpha,v',i+nv,c+nv) = <iv'|W|c,alpha>
+        !bsemat(alpha,v,i+nv,c'+nv)= <iv|W|c',alpha>
    !     
    !     integer,intent(in) :: Iex,Jex,Mex,Nex
    !     integer :: c,v,cp,vp,i,alpha,nv
