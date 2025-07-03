@@ -180,6 +180,8 @@ contains
                        call compute_xi_hh2(I,J,M,N,iQ_r,iQ_l,bsemat_hh,xi_hh2_tttt,xi_hh2_ssss,xi_hh2_sstt,xi_hh2_ttss)
                        call compute_xi_in_ehd1(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd1_ssss,xi_in_ehd1_sstt,xi_in_ehd1_ttss)
                        call compute_xi_in_ehd2(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_in_ehd2_tttt,xi_in_ehd2_ssss,xi_in_ehd2_sstt,xi_in_ehd2_ttss)
+                       call compute_xi_out_ehd1(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_out_ehd1_tttt,xi_out_ehd1_ssss,xi_out_ehd1_sstt,xi_out_ehd1_ttss)
+                       call compute_xi_out_ehd2(I,J,M,N,iQ_r,iQ_l,bsemat_d,xi_out_ehd2_tttt,xi_out_ehd2_ssss,xi_out_ehd2_sstt,xi_out_ehd2_ttss)
                     !call compute_xi_hh(I,J,M,N,bsemat_d,xi_hh1_tttt,xi_hh2_tttt,xi_hh1_ssss,xi_hh2_ssss,xi_hh1_sstt,xi_hh2_sstt,xi_hh1_ttss,xi_hh2_ttss)
                     !call compute_xi_in_ehd(I,J,M,N,bsemat_d,xi_in_ehd1_tttt,xi_in_ehd2_tttt,xi_in_ehd1_ssss,xi_in_ehd2_ssss,xi_in_ehd1_sstt,xi_in_ehd2_sstt,xi_in_ehd1_ttss,xi_in_ehd2_ttss)   
                     !call compute_xi_out_ehd(I,J,M,N,bsemat_d,xi_out_ehd1_tttt,xi_out_ehd2_tttt,xi_out_ehd1_ssss,xi_out_ehd2_ssss,xi_out_ehd1_sstt,xi_out_ehd2_sstt,xi_out_ehd1_ttss,xi_out_ehd2_ttss)
@@ -191,9 +193,9 @@ contains
                     !ham%xi_d_in_ssss(I,J,M,N) = xi_ee2_ssss + xi_hh2_ssss  - xi_in_ehd2_ssss - xi_out_ehd2_ssss
                     !ham%xi_x_in_ssss(I,J,M,N) = xi_in_ehx2_ssss + xi_out_ehx2_ssss
                      !print*,"hello8"
-                    ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l) = xi_hh1_tttt!xi_ee1_tttt !+ xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
+                    ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l) = xi_out_ehd1_tttt!xi_ee1_tttt !+ xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
                     !ham%xi_x_tttt(I,J,M,N) = xi_in_ehx1_tttt + xi_out_ehx1_tttt
-                    ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l) = xi_hh2_tttt!xi_ee2_tttt !+ xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
+                    ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l) = xi_out_ehd2_tttt!xi_ee2_tttt !+ xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
                     !ham%xi_x_in_tttt(I,J,M,N) = xi_in_ehx2_tttt + xi_out_ehx2_tttt
                      !print*,"hello8"
                     !ham%xi_d_sstt(I,J,M,N) = xi_ee1_sstt + xi_hh1_sstt  - xi_in_ehd1_sstt - xi_out_ehd1_sstt
@@ -248,8 +250,8 @@ contains
                         end do
                         end do
                     end do
-                    print*,"debug xi_d_in_tttt",I,J,M,N,iQ_r,iQ_l,abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum)
-                    if(abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum) > 1.0d-6) then
+                    !print*,"debug xi_d_in_tttt",I,J,M,N,iQ_r,iQ_l,abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum)
+                    if(abs(ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)-sum) > 1.0d-8) then
                       !print*,"yellow,yellow"
                      print*,"debug",I,J,M,N,iQ_r,iQ_l,ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l),ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),sum
                     end if
