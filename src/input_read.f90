@@ -14,7 +14,7 @@ module input_read
     character(len=9), parameter :: filename = "bsemat.h5"
     character(len=21), parameter :: dsetname_1 = "/bse_header/bands/nvb"
     character(len=21), parameter :: dsetname_2 = "/bse_header/bands/ncb"
-    !character(len=25), parameter :: dsetname_3 = "/mf_header/crystal/celvol"
+    character(len=25), parameter :: dsetname_3 = "/mf_header/crystal/celvol"
   
     integer(hid_t) :: file_id
     integer(hid_t) :: dset1_id,dset2_id,dset3_id,dset4_id
@@ -33,6 +33,10 @@ module input_read
     call h5dopen_f(file_id, dsetname_2, dset2_id, error)
     call h5dread_f(dset2_id, H5T_NATIVE_INTEGER, sys%nc, data2_dims, error)
     call h5dclose_f(dset2_id, error)
+
+    call h5dopen_f(file_id, dsetname_3, dset3_id, error)
+    call h5dread_f(dset3_id, H5T_NATIVE_DOUBLE, sys%vol, data3_dims, error)
+    call h5dclose_f(dset3_id, error)
  
     call h5fclose_f(file_id, error)
     call h5close_f(error)
@@ -77,7 +81,7 @@ module input_read
                       print *, "Error reading eigenvalue from file: ", filename
                       exit
                   end if
-                  exciton_sys%eigenvalues_t(x,iQ) = val1 / 27.2114079527 ! Convert to eV
+                  exciton_sys%eigenvalues_t(x,iQ) = val1 / 13.6056980659 ! Convert to Ry
                   print *, "Eigenvalue for Q index ", iQ, " band ", x, ": ", exciton_sys%eigenvalues_t(x,iQ)
               end do
           close(iunit)
@@ -121,7 +125,7 @@ module input_read
             if(error /= 0) then
                 print *, "Error opening dataset: ", dsetname
                 exit
-            end if
+          end if
          ! call h5dget_space_f(dset_id, space_id, error)
          !   if(error /= 0) then
          !       print *, "Error getting space for dataset: ", dsetname
@@ -140,13 +144,13 @@ module input_read
           
            
            !allocate(exciton_sys%eigenvectors_t(dims(2),dims(3),dims(4),dims(5),dims(6),dims(7)))
-           print *, "Dimensions of the eigenvectors: ", dims(1),dims(2), dims(3), dims(4), dims(5), dims(6), dims(7)
+          print *, "Dimensions of the eigenvectors: ", dims(1),dims(2), dims(3), dims(4), dims(5), dims(6), dims(7)
         
-         call h5dread_f(dset_id, H5T_NATIVE_DOUBLE, tmp, dims, error)
+          call h5dread_f(dset_id, H5T_NATIVE_DOUBLE, tmp, dims, error)
             if(error /= 0) then
                 print *, "Error reading eigenvectors from dataset: ", dsetname
                 exit
-            end if
+          end if
          !call h5sclose_f(space_id, error)
          call h5dclose_f(dset_id, error)
          call h5fclose_f(file_id, error)
@@ -308,6 +312,25 @@ module input_read
     integer     ::   error,iv,ivp,ic,icp
     integer :: imatrix
     integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+    double precision, allocatable :: bse_fac_imat1(:,:)
+    allocate(bse_fac_imat1(sys%nk,sys%nk))
+    bse_fac_imat1 = 0.0d0
+    bse_fac_imat1(1,1) = -7.442716730913625E-002 
+    bse_fac_imat1(2,2) = -7.442716730913625E-002 
+    bse_fac_imat1(3,3) = -7.442716730913625E-002 
+    bse_fac_imat1(4,4) = -7.442716730913625E-002 
+    bse_fac_imat1(1,2) =  -9.298078369431334E-003
+    bse_fac_imat1(2,1) =  -9.298078369431334E-003
+    bse_fac_imat1(1,3) =   -2.724756351195282E-003
+    bse_fac_imat1(3,1) =   -2.724756351195282E-003
+    bse_fac_imat1(1,4) = -9.298078369431360E-003
+    bse_fac_imat1(4,1) = -9.298078369431360E-003
+    bse_fac_imat1(2,3) =   -9.298078369431334E-003 
+    bse_fac_imat1(3,2) =    -9.298078369431334E-003 
+    bse_fac_imat1(2,4) =  -2.724756351195282E-003 
+    bse_fac_imat1(4,2) = -2.724756351195282E-003 
+    bse_fac_imat1(3,4) = -9.298078369431334E-003 
+    bse_fac_imat1(4,3) = -9.298078369431334E-003 
   
     allocate(data1_dims(7))
     allocate(data1_out(2,sys%nv,sys%nv,sys%nc,sys%nc,sys%nk,sys%nk))
@@ -323,7 +346,7 @@ module input_read
     do iQ = 1,sys%nQ
       write(filename, '("bsemat_", I0, ".h5")') iQ
       call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, error)
-      do imatrix = 3,3
+      do imatrix = 1,3
         if (imatrix== 1) then
          call h5dopen_f(file_id, name_1, dset1_id, error)
         elseif (imatrix== 2) then
@@ -342,9 +365,14 @@ module input_read
               do iv=1,sys%nv
                  do ik = 1,sys%nk
                     do ikp = 1,sys%nk
-                      bsemat(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
-                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
-                      !print*,bsemat(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
+                      if(imatrix==1)then 
+                        bsemat(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)*(-1*bse_fac_imat1(ik,ikp))
+                      else
+                        bsemat(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)*8*3.14159265359/(sys%vol*sys%nk)
+                      end if
+                      print*,bsemat(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
                     end do
                   end do
             
@@ -378,6 +406,25 @@ module input_read
     integer(hid_t) :: dset1_id,dset2_id
     integer     ::   error,iv,ivp,ic,icp
     integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+    double precision, allocatable :: bse_fac_imat1(:,:)
+    allocate(bse_fac_imat1(sys%nk,sys%nk))
+    bse_fac_imat1 = 0.0d0
+    bse_fac_imat1(1,1) = -7.442716730913625E-002 
+    bse_fac_imat1(2,2) = -7.442716730913625E-002 
+    bse_fac_imat1(3,3) = -7.442716730913625E-002 
+    bse_fac_imat1(4,4) = -7.442716730913625E-002 
+    bse_fac_imat1(1,2) =  -9.298078369431334E-003
+    bse_fac_imat1(2,1) =  -9.298078369431334E-003
+    bse_fac_imat1(1,3) =   -2.724756351195282E-003
+    bse_fac_imat1(3,1) =   -2.724756351195282E-003
+    bse_fac_imat1(1,4) = -9.298078369431360E-003
+    bse_fac_imat1(4,1) = -9.298078369431360E-003
+    bse_fac_imat1(2,3) =   -9.298078369431334E-003 
+    bse_fac_imat1(3,2) =    -9.298078369431334E-003 
+    bse_fac_imat1(2,4) =  -2.724756351195282E-003 
+    bse_fac_imat1(4,2) = -2.724756351195282E-003 
+    bse_fac_imat1(3,4) = -9.298078369431334E-003 
+    bse_fac_imat1(4,3) = -9.298078369431334E-003 
   
     allocate(data1_dims(7))
     data1_dims(1) = 2
@@ -414,9 +461,14 @@ module input_read
               do iv=1,sys%nc
                  do ik = 1,sys%nk
                     do ikp = 1,sys%nk
-                      bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
-                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
-                     ! print*,bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
+                      if(imatrix==1)then
+                        bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8) * (-1*bse_fac_imat1(ik,ikp))
+                      else
+                        bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)*8*3.14159265359/(sys%vol*sys%nk)
+                      end if
+                      print*,bsemat_ee(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
                     end do
                   end do
             
@@ -448,6 +500,25 @@ module input_read
     integer(hid_t) :: dset1_id,dset2_id
     integer     ::   error,iv,ivp,ic,icp
     integer(hsize_t), DIMENSION(:), allocatable :: data1_dims
+    double precision, allocatable :: bse_fac_imat1(:,:)
+    allocate(bse_fac_imat1(sys%nk,sys%nk))
+    bse_fac_imat1 = 0.0d0
+    bse_fac_imat1(1,1) = -7.442716730913625E-002 
+    bse_fac_imat1(2,2) = -7.442716730913625E-002 
+    bse_fac_imat1(3,3) = -7.442716730913625E-002 
+    bse_fac_imat1(4,4) = -7.442716730913625E-002 
+    bse_fac_imat1(1,2) =  -9.298078369431334E-003
+    bse_fac_imat1(2,1) =  -9.298078369431334E-003
+    bse_fac_imat1(1,3) =   -2.724756351195282E-003
+    bse_fac_imat1(3,1) =   -2.724756351195282E-003
+    bse_fac_imat1(1,4) = -9.298078369431360E-003
+    bse_fac_imat1(4,1) = -9.298078369431360E-003
+    bse_fac_imat1(2,3) =   -9.298078369431334E-003 
+    bse_fac_imat1(3,2) =    -9.298078369431334E-003 
+    bse_fac_imat1(2,4) =  -2.724756351195282E-003 
+    bse_fac_imat1(4,2) = -2.724756351195282E-003 
+    bse_fac_imat1(3,4) = -9.298078369431334E-003 
+    bse_fac_imat1(4,3) = -9.298078369431334E-003 
     allocate(data1_out(2,sys%nv,sys%nv,sys%nv,sys%nv,sys%nk,sys%nk))
     allocate(data1_dims(7))
     data1_dims(1) = 2
@@ -484,9 +555,15 @@ module input_read
               do iv=1,sys%nv
                  do ik = 1,sys%nk
                     do ikp = 1,sys%nk
-                      bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) +cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
-                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)
-                      !print*,bsemat(iv,ivp,ic,icp),iv,ivp,ic,icp
+                        if(imatrix==1)then 
+                          bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) + cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)* (-1*bse_fac_imat1(ik,ikp))
+                        else
+                          bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) = bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ) + cmplx(data1_out(1,iv,ivp,ic,icp,ik,ikp), &
+                                                              data1_out(2,iv,ivp,ic,icp,ik,ikp), kind=8)*8*3.14159265359/(sys%vol*sys%nk)
+                        end if
+                        !print*,bsemat(iv,ivp,ic,icp),iv,ivp,ic,icp
+                        print*,bsemat_hh(iv,ivp,ic,icp,ik,ikp,iQ),iv,ivp,ic,icp,ik,ikp,iQ
                     end do
                   end do
             

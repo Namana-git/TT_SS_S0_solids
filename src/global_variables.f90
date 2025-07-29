@@ -6,7 +6,7 @@ module global_variables
     
     integer :: nc,nv,nex,nb,northo,ncutoff,nex_max,biex,num_ortho,nex_max1,nex_max_s,nex_max_t,lin_ind  !no of conduction, valence, exciton states and c+v total no of states 
     integer :: nk,nQ,neb
-    
+    double precision :: vol
     double precision, allocatable :: kpts(:,:),Qpts(:,:)
     end type input
     type(input) :: sys
@@ -38,7 +38,7 @@ module global_variables
           complex(kind=8), allocatable :: xi_d_in_ttss(:,:,:,:,:,:),xi_d_in_sstt(:,:,:,:,:,:)
           complex(kind=8), allocatable :: xi_x_in_ttss(:,:,:,:,:,:),xi_x_in_sstt(:,:,:,:,:,:)
           complex(kind=8), allocatable :: xi_x_ttss(:,:,:,:,:,:),xi_x_sstt(:,:,:,:,:,:)
-          complex(kind=8),allocatable :: H(:,:),O(:,:),c(:,:)
+          complex(kind=8),allocatable :: H(:,:),O(:,:),c(:,:),A(:,:)
     end  type Hamiltonian
 
     

@@ -193,9 +193,10 @@ contains
                     !ham%xi_d_in_ssss(I,J,M,N) = xi_ee2_ssss + xi_hh2_ssss  - xi_in_ehd2_ssss - xi_out_ehd2_ssss
                     !ham%xi_x_in_ssss(I,J,M,N) = xi_in_ehx2_ssss + xi_out_ehx2_ssss
                      !print*,"hello8"
-                    ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l) = xi_out_ehd1_tttt!xi_ee1_tttt !+ xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
+                    ham%xi_d_tttt(I,J,M,N,iQ_r,iQ_l) = xi_ee1_tttt + xi_hh1_tttt  - xi_in_ehd1_tttt - xi_out_ehd1_tttt
                     !ham%xi_x_tttt(I,J,M,N) = xi_in_ehx1_tttt + xi_out_ehx1_tttt
-                    ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l) = xi_out_ehd2_tttt!xi_ee2_tttt !+ xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
+                    ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l) = xi_ee2_tttt + xi_hh2_tttt  - xi_in_ehd2_tttt - xi_out_ehd2_tttt
+                    !print*,ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l),ham%xi_d_in_tttt(I,J,M,N,iQ_r,iQ_l)
                     !ham%xi_x_in_tttt(I,J,M,N) = xi_in_ehx2_tttt + xi_out_ehx2_tttt
                      !print*,"hello8"
                     !ham%xi_d_sstt(I,J,M,N) = xi_ee1_sstt + xi_hh1_sstt  - xi_in_ehd1_sstt - xi_out_ehd1_sstt

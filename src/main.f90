@@ -26,8 +26,8 @@ program mol_shiva
     call read_triplet_exciton_eigenvectors()
 
     !sys%nv = 2  !debug statement
-
- 
+    call read_input()
+    print*,sys%vol,sys%nc,sys%nv
 
    ! call sort_energy()
      !print*,"hey"
@@ -35,7 +35,7 @@ program mol_shiva
     !call compute_all_lambda()
     call compute_lambda()
     call compute_xi()
-    call debug_xi()
+    !call debug_xi()
   !  call construct_AB_SS()
   !  call construct_AB_TT()q
   !  call construct_AB_TTSS()
@@ -47,7 +47,7 @@ program mol_shiva
     !call compute_xi()
     !call compute_xi_in()
     !call compute_TT_matrix()
-    !call solve_eigenvalue_overlap()
+    call solve_eigenvalue_overlap()
    !call solve_eigenvalue_O()
     !call compute_H_ortho1()
    !call solve_eigenvalue_H()
